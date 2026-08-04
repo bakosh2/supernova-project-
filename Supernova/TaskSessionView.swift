@@ -205,3 +205,18 @@ struct TaskSessionView: View {
         .previewInterfaceOrientation(.landscapeLeft)
         .previewDevice(PreviewDevice(rawValue: "iPad Air 11-inch (M4)"))
 }
+
+#Preview("4. Fast 1-Min Focus & 1-Min Break Test") {
+    let sampleTask = HomeworkTask.createFromTaskCreation(
+        title: "اختبار دقيقة واحدة",
+        focusDurationMinutes: 1,
+        breakDurationMinutes: 1,
+        validityDays: 1,
+        stepTitles: ["أكمل المسائل الفردية فقط", "حل سؤال ٤", "تأكد من حلك"],
+        requiresCompletionPIN: false
+    )!
+    
+    return TaskSessionView(task: sampleTask)
+        .previewInterfaceOrientation(.landscapeLeft)
+        .previewDevice(PreviewDevice(rawValue: "iPad Air 11-inch (M4)"))
+}

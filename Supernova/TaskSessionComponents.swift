@@ -282,9 +282,9 @@ struct FocusPauseButton: View {
 // MARK: - Break Encouragement Card (Left Side in Break Phase)
 struct BreakEncouragementCard: View {
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 0) {
             Text("أحسنت!")
-                .font(.system(size: 38, weight: .bold, design: .rounded))
+                .font(.system(size: 50, weight: .bold, design: .rounded))
                 .foregroundColor(Color(hex: "#1E264F"))
                 .environment(\.layoutDirection, .rightToLeft)
             
@@ -292,10 +292,10 @@ struct BreakEncouragementCard: View {
             Image("stretching_star")
                 .resizable()
                 .scaledToFit()
-                .frame(maxHeight: 220)
+                .frame(maxHeight: 400)
             
             Text("حان الوقت ليرتاح عقلك قليلًا.")
-                .font(.system(size: 26, weight: .semibold, design: .rounded))
+                .font(.system(size: 40, weight: .semibold, design: .rounded))
                 .foregroundColor(Color(hex: "#1E264F"))
                 .multilineTextAlignment(.center)
                 .environment(\.layoutDirection, .rightToLeft)
