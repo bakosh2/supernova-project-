@@ -70,7 +70,7 @@ struct TaskSessionView: View {
                             taskTitle: task.title,
                             subtaskTitle: viewModel.currentSubtask?.title ?? "",
                             isSubtaskCompleted: viewModel.isCurrentSubtaskCompleted,
-                            totalSubtasks: viewModel.sortedSubtasks.count,
+                            subtasks: viewModel.sortedSubtasks,
                             currentIndex: viewModel.currentSubtaskIndex,
                             isFirstSubtask: viewModel.isFirstSubtask,
                             actionButtonTitle: viewModel.primaryButtonTitle,

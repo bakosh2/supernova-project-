@@ -67,52 +67,53 @@ struct SubtaskCompletionControl: View {
     }
 }
 
-// MARK: - Disconnected Subtask Progress Segments
+// MARK: - Disconnected Subtask Progress Segments (RTL Visual Progression)
 struct SubtaskProgressSegments: View {
-    let totalSubtasks: Int
+    let subtasks: [HomeworkSubtask]
     let currentIndex: Int
     
     var body: some View {
         HStack(spacing: 8) {
-            ForEach(0..<max(1, totalSubtasks), id: \.self) { index in
+            ForEach(Array(subtasks.indices.reversed()), id: \.self) { index in
                 Capsule()
                     .fill(segmentColor(for: index))
+                    .frame(maxWidth: .infinity)
                     .frame(height: 6)
             }
         }
     }
     
     private func segmentColor(for index: Int) -> Color {
-        if index < currentIndex {
+        if index == currentIndex {
             return Color.purpleCheckbox
-        } else if index == currentIndex {
-            return Color(hex: "#7A4FB7")
-        } else {
-            return Color(hex: "#E2E5F2")
         }
+        if index < subtasks.count && subtasks[index].isCompleted {
+            return Color.purpleCheckbox.opacity(0.75)
+        }
+        return Color.gray.opacity(0.22)
     }
 }
 
 // MARK: - Previous Subtask Button
 struct PreviousSubtaskButton: View {
-    let isEnabled: Bool
+    let isDisabled: Bool
     let action: () -> Void
     
     var body: some View {
         Button(action: {
-            if isEnabled { action() }
+            if !isDisabled { action() }
         }) {
             ZStack {
                 Circle()
-                    .fill(isEnabled ? Color.purpleCheckbox : Color(hex: "#D1D1D4"))
+                    .fill(!isDisabled ? Color.purpleCheckbox : Color(hex: "#D1D1D4"))
                     .frame(width: 36, height: 36)
                 
                 Image(systemName: "chevron.right")
                     .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(isEnabled ? .white : Color.white.opacity(0.6))
+                    .foregroundColor(!isDisabled ? .white : Color.white.opacity(0.6))
             }
         }
-        .disabled(!isEnabled)
+        .disabled(isDisabled)
         .buttonStyle(.plain)
         .accessibilityLabel("الخطوة السابقة")
         .accessibilityAddTraits(.isButton)
@@ -124,7 +125,7 @@ struct FocusTaskCard: View {
     let taskTitle: String
     let subtaskTitle: String
     let isSubtaskCompleted: Bool
-    let totalSubtasks: Int
+    let subtasks: [HomeworkSubtask]
     let currentIndex: Int
     let isFirstSubtask: Bool
     let actionButtonTitle: String
@@ -167,18 +168,19 @@ struct FocusTaskCard: View {
             
             Spacer()
             
-            // Progress Segments & Previous Button
-            HStack(spacing: 14) {
-                PreviousSubtaskButton(
-                    isEnabled: !isFirstSubtask,
-                    action: onPreviousSubtask
-                )
-                
+            // Progress Segments (Left) & Previous Button (Right) in explicit LTR container
+            HStack(spacing: 12) {
                 SubtaskProgressSegments(
-                    totalSubtasks: totalSubtasks,
+                    subtasks: subtasks,
                     currentIndex: currentIndex
                 )
+                
+                PreviousSubtaskButton(
+                    isDisabled: isFirstSubtask,
+                    action: onPreviousSubtask
+                )
             }
+            .environment(\.layoutDirection, .leftToRight)
             .padding(.bottom, 12)
             
             // Primary Action Button ("المهمة التالية" / "إنهاء المهمة")
