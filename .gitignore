@@ -1,0 +1,8 @@
+.DS_Store
+/*.username
+*.xcworkspace
+!default.xcworkspace
+xcuserdata/
+DerivedData/
+*.moved-aside
+*.xcuserstate
