@@ -32,25 +32,17 @@ struct BackCapsuleButton: View {
     
     var body: some View {
         Button(action: action) {
-            ZStack {
-                Capsule()
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.tealPrimary, Color(hex: "#43A8A0")],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                
-                Capsule()
-                    .stroke(Color.white.opacity(0.35), lineWidth: 1)
-                
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(Color(hex: "#1E264F"))
-            }
-            .frame(width: 110, height: 42)
-            .shadow(color: Color.black.opacity(0.18), radius: 6, x: 0, y: 3)
+            Image(systemName: "chevron.right")
+                .font(.system(size: 18, weight: .bold))
+                .foregroundColor(Color(hex: "#1E264F"))
+                .frame(width: 110, height: 42)
+                .background(Color.tealPrimary)
+                .clipShape(Capsule())
+                .overlay(
+                    Capsule()
+                        .stroke(Color.white.opacity(0.35), lineWidth: 1)
+                )
+                .shadow(color: Color.black.opacity(0.18), radius: 6, x: 0, y: 3)
         }
     }
 }
@@ -117,32 +109,24 @@ struct HelpMeStartButton: View {
     let action: () -> Void
     
     var body: some View {
-        Button(action: {
-            if isEnabled {
-                action()
-            }
-        }) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(isEnabled ? Color.tealPrimary : Color.disabledButtonGray)
-                
-                if isEnabled {
+        Button(action: action) {
+            Text("يلا نبدأ!")
+                .font(.system(size: 29, weight: .bold))
+                .foregroundColor(isEnabled ? .white : Color.white.opacity(0.85))
+                .frame(maxWidth: 440)
+                .frame(height: 80)
+                .background(isEnabled ? Color.tealPrimary : Color.disabledButtonGray)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .overlay(
                     RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.white.opacity(0.4), lineWidth: 1)
-                }
-                
-                Text("يلا نبدأ!")
-                    .font(.system(size: 29, weight: .bold, design: .rounded))
-                    .foregroundColor(isEnabled ? .white : Color.white.opacity(0.85))
-            }
-            .frame(maxWidth: 440)
-            .frame(height: 80)
-            .shadow(
-                color: isEnabled ? Color.tealPrimary.opacity(0.45) : Color.clear,
-                radius: isEnabled ? 10 : 0,
-                x: 0,
-                y: isEnabled ? 4 : 0
-            )
+                        .stroke(isEnabled ? Color.white.opacity(0.4) : Color.clear, lineWidth: 1)
+                )
+                .shadow(
+                    color: isEnabled ? Color.tealPrimary.opacity(0.45) : Color.clear,
+                    radius: isEnabled ? 10 : 0,
+                    x: 0,
+                    y: isEnabled ? 4 : 0
+                )
         }
         .disabled(!isEnabled)
     }
