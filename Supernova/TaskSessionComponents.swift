@@ -11,25 +11,17 @@ struct SessionNavigationButton: View {
     
     var body: some View {
         Button(action: action) {
-            ZStack {
-                Capsule()
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.tealPrimary, Color(hex: "#43A8A0")],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                
-                Capsule()
-                    .stroke(Color.white.opacity(0.35), lineWidth: 1)
-                
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(Color(hex: "#1E264F"))
-            }
-            .frame(width: 110, height: 42)
-            .shadow(color: Color.black.opacity(0.18), radius: 6, x: 0, y: 3)
+            Image(systemName: "chevron.right")
+                .font(.system(size: 18, weight: .bold))
+                .foregroundColor(Color(hex: "#1E264F"))
+                .frame(width: 110, height: 42)
+                .background(Color.tealPrimary)
+                .clipShape(Capsule())
+                .overlay(
+                    Capsule()
+                        .stroke(Color.white.opacity(0.35), lineWidth: 1)
+                )
+                .shadow(color: Color.black.opacity(0.18), radius: 6, x: 0, y: 3)
         }
     }
 }
@@ -41,20 +33,17 @@ struct SubtaskCompletionControl: View {
     
     var body: some View {
         Button(action: onTap) {
-            ZStack {
-                if isCompleted {
-                    Circle()
-                        .fill(Color.purpleCheckbox)
-                        .frame(width: 38, height: 38)
-                    
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.white)
-                } else {
-                    Circle()
-                        .stroke(Color.purpleCheckbox, lineWidth: 2.5)
-                        .frame(width: 36, height: 36)
-                }
+            if isCompleted {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(.white)
+                    .frame(width: 38, height: 38)
+                    .background(Color.purpleCheckbox)
+                    .clipShape(Circle())
+            } else {
+                Circle()
+                    .stroke(Color.purpleCheckbox, lineWidth: 2.5)
+                    .frame(width: 36, height: 36)
             }
         }
     }
@@ -68,11 +57,8 @@ struct SubtaskProgressSegments: View {
     var body: some View {
         HStack(spacing: 8) {
             ForEach(Array(subtasks.indices.reversed()), id: \.self) { index in
-                let color: Color = index == currentIndex ? Color.purpleCheckbox : (subtasks[index].isCompleted ? Color.purpleCheckbox.opacity(0.75) : Color.gray.opacity(0.22))
-                
                 Capsule()
-                    .fill(color)
-                    .frame(maxWidth: .infinity)
+                    .fill(index == currentIndex ? Color.purpleCheckbox : (subtasks[index].isCompleted ? Color.purpleCheckbox.opacity(0.75) : Color.gray.opacity(0.22)))
                     .frame(height: 6)
             }
         }
@@ -86,15 +72,12 @@ struct PreviousSubtaskButton: View {
     
     var body: some View {
         Button(action: action) {
-            ZStack {
-                Circle()
-                    .fill(isDisabled ? Color(hex: "#D1D1D4") : Color.purpleCheckbox)
-                    .frame(width: 36, height: 36)
-                
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(isDisabled ? Color.white.opacity(0.6) : .white)
-            }
+            Image(systemName: "chevron.right")
+                .font(.system(size: 14, weight: .bold))
+                .foregroundColor(isDisabled ? Color.white.opacity(0.6) : .white)
+                .frame(width: 36, height: 36)
+                .background(isDisabled ? Color(hex: "#D1D1D4") : Color.purpleCheckbox)
+                .clipShape(Circle())
         }
         .disabled(isDisabled)
     }
@@ -165,21 +148,19 @@ struct FocusTaskCard: View {
             
             // Primary Action Button ("المهمة التالية" / "إنهاء المهمة")
             Button(action: onPrimaryAction) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(canAdvance ? Color.tealPrimary : Color.disabledButtonGray)
-                    
-                    Text(actionButtonTitle)
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
-                        .foregroundColor(canAdvance ? .white : Color.white.opacity(0.85))
-                }
-                .frame(height: 60)
-                .shadow(
-                    color: canAdvance ? Color.tealPrimary.opacity(0.4) : Color.clear,
-                    radius: canAdvance ? 8 : 0,
-                    x: 0,
-                    y: canAdvance ? 3 : 0
-                )
+                Text(actionButtonTitle)
+                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .foregroundColor(canAdvance ? .white : Color.white.opacity(0.85))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 60)
+                    .background(canAdvance ? Color.tealPrimary : Color.disabledButtonGray)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .shadow(
+                        color: canAdvance ? Color.tealPrimary.opacity(0.4) : Color.clear,
+                        radius: canAdvance ? 8 : 0,
+                        x: 0,
+                        y: canAdvance ? 3 : 0
+                    )
             }
             .disabled(!canAdvance)
         }
@@ -236,19 +217,14 @@ struct FocusPauseButton: View {
     
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 10) {
-                Image(systemName: isPaused ? "play.fill" : "pause.fill")
-                    .font(.system(size: 18, weight: .bold))
-                
-                Text(isPaused ? "متابعة" : "إيقاف مؤقت")
-                    .font(.system(size: 22, weight: .bold, design: .rounded))
-            }
-            .foregroundColor(.white)
-            .padding(.horizontal, 32)
-            .padding(.vertical, 14)
-            .background(Color.tealPrimary)
-            .clipShape(Capsule())
-            .shadow(color: Color.tealPrimary.opacity(0.4), radius: 8, x: 0, y: 4)
+            Label(isPaused ? "متابعة" : "إيقاف مؤقت", systemImage: isPaused ? "play.fill" : "pause.fill")
+                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .foregroundColor(.white)
+                .padding(.horizontal, 32)
+                .padding(.vertical, 14)
+                .background(Color.tealPrimary)
+                .clipShape(Capsule())
+                .shadow(color: Color.tealPrimary.opacity(0.4), radius: 8, x: 0, y: 4)
         }
     }
 }
@@ -288,15 +264,13 @@ struct SkipBreakButton: View {
     let action: () -> Void
     
     var body: some View {
-        Button(action: action) {
-            Text("تخطي وقت الراحة")
-                .font(.system(size: 22, weight: .bold, design: .rounded))
-                .foregroundColor(.white)
-                .padding(.horizontal, 32)
-                .padding(.vertical, 14)
-                .background(Color.tealPrimary)
-                .clipShape(Capsule())
-                .shadow(color: Color.tealPrimary.opacity(0.4), radius: 8, x: 0, y: 4)
-        }
+        Button("تخطي وقت الراحة", action: action)
+            .font(.system(size: 22, weight: .bold, design: .rounded))
+            .foregroundColor(.white)
+            .padding(.horizontal, 32)
+            .padding(.vertical, 14)
+            .background(Color.tealPrimary)
+            .clipShape(Capsule())
+            .shadow(color: Color.tealPrimary.opacity(0.4), radius: 8, x: 0, y: 4)
     }
 }
