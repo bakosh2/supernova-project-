@@ -39,7 +39,7 @@ final class HomeworkTask {
     init(
         id: UUID = UUID(),
         title: String,
-        subject: String? = nil,
+        // subject: String? = nil,
         focusDurationSeconds: Int,
         breakDurationSeconds: Int,
         validUntil: Date? = nil,

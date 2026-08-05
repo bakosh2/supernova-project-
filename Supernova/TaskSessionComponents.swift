@@ -298,6 +298,7 @@ struct BreakEncouragementCard: View {
                 .font(.system(size: 40, weight: .semibold, design: .rounded))
                 .foregroundColor(Color(hex: "#1E264F"))
                 .multilineTextAlignment(.center)
+                .lineSpacing(12)
                 .environment(\.layoutDirection, .rightToLeft)
         }
         .padding(36)
