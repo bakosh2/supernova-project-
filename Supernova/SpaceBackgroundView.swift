@@ -29,12 +29,20 @@ struct SpaceBackgroundView: View {
         (0.06, 0.90, 4, 0.5, false)
     ]
     
+    private let gradientStops: [Gradient.Stop] = [
+        .init(color: Color(hex: "#1E264F"), location: 0.00),
+        .init(color: Color(hex: "#1E2651"), location: 0.36),
+        .init(color: Color(hex: "#4454A9"), location: 0.61),
+        .init(color: Color(hex: "#B39DDB"), location: 0.81),
+        .init(color: Color(hex: "#B39DDB"), location: 1.00)
+    ]
+    
     var body: some View {
         GeometryReader { geometry in
             ZStack {
                 // Smooth navy-to-lavender vertical linear gradient matching hex stops
                 LinearGradient(
-                    stops: Color.spaceGradientStops,
+                    stops: gradientStops,
                     startPoint: .top,
                     endPoint: .bottom
                 )

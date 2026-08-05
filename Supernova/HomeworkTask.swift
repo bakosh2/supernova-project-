@@ -11,7 +11,7 @@ import SwiftData
 final class HomeworkTask {
     var id: UUID
     var title: String
-    var subject: String?
+    //var subject: String?
     
     var focusDurationSeconds: Int
     var breakDurationSeconds: Int
@@ -39,7 +39,7 @@ final class HomeworkTask {
     init(
         id: UUID = UUID(),
         title: String,
-        // subject: String? = nil,
+        //subject: String? = nil,
         focusDurationSeconds: Int,
         breakDurationSeconds: Int,
         validUntil: Date? = nil,
@@ -56,7 +56,7 @@ final class HomeworkTask {
     ) {
         self.id = id
         self.title = title
-        self.subject = subject
+        //self.subject = subject
         self.focusDurationSeconds = focusDurationSeconds
         self.breakDurationSeconds = breakDurationSeconds
         self.validUntil = validUntil
@@ -119,7 +119,7 @@ final class HomeworkTask {
         
         let task = HomeworkTask(
             title: trimmedTitle,
-            subject: subject,
+            //subject: subject,
             focusDurationSeconds: focusSecs,
             breakDurationSeconds: breakSecs,
             validUntil: validUntilDate,

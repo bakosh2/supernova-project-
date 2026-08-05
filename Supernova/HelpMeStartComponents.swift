@@ -5,39 +5,20 @@
 
 import SwiftUI
 
-// MARK: - Color Extension for Hex Support
+// MARK: - Color Extension
 extension Color {
     init(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
         var int: UInt64 = 0
         Scanner(string: hex).scanHexInt64(&int)
-        let a, r, g, b: UInt64
-        switch hex.count {
-        case 3: // RGB (12-bit)
-            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
-        case 6: // RGB (24-bit)
-            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
-        case 8: // ARGB (32-bit)
-            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
-        default:
-            (a, r, g, b) = (255, 0, 0, 0)
+        let r, g, b: UInt64
+        if hex.count == 6 {
+            (r, g, b) = (int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        } else {
+            (r, g, b) = (0, 0, 0)
         }
-        self.init(
-            .sRGB,
-            red: Double(r) / 255,
-            green: Double(g) / 255,
-            blue:  Double(b) / 255,
-            opacity: Double(a) / 255
-        )
+        self.init(.sRGB, red: Double(r) / 255, green: Double(g) / 255, blue: Double(b) / 255, opacity: 1)
     }
-    
-    static let spaceGradientStops: [Gradient.Stop] = [
-        .init(color: Color(hex: "#1E264F"), location: 0.00),
-        .init(color: Color(hex: "#1E2651"), location: 0.36),
-        .init(color: Color(hex: "#4454A9"), location: 0.61),
-        .init(color: Color(hex: "#B39DDB"), location: 0.81),
-        .init(color: Color(hex: "#B39DDB"), location: 1.00)
-    ]
     
     static let rowBackgroundDark = Color(hex: "#26315F")
     static let tealPrimary = Color(hex: "#55BBB3")
@@ -45,14 +26,7 @@ extension Color {
     static let disabledButtonGray = Color(hex: "#D1D1D4")
 }
 
-// MARK: - Space Background View Alias
-struct SpaceBackground: View {
-    var body: some View {
-        SpaceBackgroundView()
-    }
-}
-
-// MARK: - Back Capsule Button
+// Back Button
 struct BackCapsuleButton: View {
     let action: () -> Void
     
@@ -78,18 +52,14 @@ struct BackCapsuleButton: View {
             .frame(width: 110, height: 42)
             .shadow(color: Color.black.opacity(0.18), radius: 6, x: 0, y: 3)
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel("رجوع")
-        .accessibilityAddTraits(.isButton)
     }
 }
 
-// MARK: - Help Checklist Row Component
+// Checklist Row
 struct HelpChecklistRow: View {
     let title: String
     let isSelected: Bool
     let onTap: () -> Void
-    var customAccessibilityLabel: String? = nil
     
     var body: some View {
         Button(action: {
@@ -100,15 +70,11 @@ struct HelpChecklistRow: View {
             HStack(spacing: 16) {
                 Spacer()
                 
-                // Arabic question title (right-aligned next to the checkbox)
                 Text(title)
-                    .font(.system(size: 26, weight: .semibold, design: .rounded))
+                    .font(.system(size: 26, weight: .semibold))
                     .foregroundColor(.white)
-                    .lineLimit(1)
-                    .multilineTextAlignment(.trailing)
                     .environment(\.layoutDirection, .rightToLeft)
                 
-                // Right Checkbox Indicator
                 ZStack {
                     if isSelected {
                         // Checked state: purple rounded square box with white checkmark
@@ -142,25 +108,10 @@ struct HelpChecklistRow: View {
                 y: isSelected ? 0 : 2
             )
         }
-        .buttonStyle(RowButtonStyle())
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(customAccessibilityLabel ?? title)
-        .accessibilityValue(isSelected ? "محدد" : "غير محدد")
-        .accessibilityAddTraits(.isButton)
-        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 }
 
-// Custom subtle button style for row press response
-private struct RowButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.985 : 1.0)
-            .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
-    }
-}
-
-// MARK: - Main Action Button ("يلا نبدأ!")
+// Start Button
 struct HelpMeStartButton: View {
     let isEnabled: Bool
     let action: () -> Void
@@ -194,19 +145,5 @@ struct HelpMeStartButton: View {
             )
         }
         .disabled(!isEnabled)
-        .buttonStyle(ActionButtonStyle(isEnabled: isEnabled))
-        .accessibilityLabel("يلا نبدأ!")
-        .accessibilityHint(isEnabled ? "ابدأ الجلسة" : "أكمل عناصر الاستعداد أولًا")
-        .accessibilityAddTraits(.isButton)
-    }
-}
-
-private struct ActionButtonStyle: ButtonStyle {
-    let isEnabled: Bool
-    
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(isEnabled && configuration.isPressed ? 0.98 : 1.0)
-            .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
     }
 }

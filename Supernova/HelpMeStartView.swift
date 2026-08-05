@@ -27,7 +27,7 @@ struct HelpMeStartView: View {
             
             ZStack(alignment: .topTrailing) {
                 // Background space gradient with decorative stars
-                SpaceBackground()
+                SpaceBackgroundView()
                 
                 // Centered vertical content column (Title, 3 Checklist Rows, Start Button)
                 VStack(spacing: 0) {
@@ -37,7 +37,7 @@ struct HelpMeStartView: View {
                     
                     // Arabic header title "ساعدني أبدأ"
                     Text("ساعدني أبدأ")
-                        .font(.system(size: min(screenWidth * 0.042, 52), weight: .bold, design: .rounded))
+                        .font(.system(size: min(screenWidth * 0.042, 52), weight: .bold))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
                         .environment(\.layoutDirection, .rightToLeft)
@@ -121,84 +121,10 @@ struct HelpMeStartView: View {
     }
 }
 
-// MARK: - Navigation Flow Example & Preview Components
-
-/// Example showing how a task page presents HelpMeStartView and navigates forward.
-struct TaskPageNavigationExampleView: View {
-    @State private var showingHelpMeStart = false
-    @State private var startedSession = false
-    
-    var body: some View {
-        NavigationStack {
-            ZStack {
-                Color(hex: "#1E264F").ignoresSafeArea()
-                
-                VStack(spacing: 24) {
-                    Text("مهام اليوم")
-                        .font(.system(size: 40, weight: .bold))
-                        .foregroundColor(.white)
-                    
-                    if startedSession {
-                        VStack(spacing: 16) {
-                            Text("تم بدء الجلسة بنجاح! 🚀")
-                                .font(.system(size: 28, weight: .bold))
-                                .foregroundColor(Color.tealPrimary)
-                            
-                            Button("إعادة Benchmark") {
-                                startedSession = false
-                            }
-                            .buttonStyle(.borderedProminent)
-                        }
-                    } else {
-                        // Sample task card button
-                        VStack(alignment: .trailing, spacing: 12) {
-                            Text("حل واجب الرياضيات")
-                                .font(.system(size: 24, weight: .bold))
-                                .foregroundColor(.white)
-                            
-                            Button(action: {
-                                showingHelpMeStart = true
-                            }) {
-                                Text("ابدأ")
-                                    .font(.system(size: 20, weight: .bold))
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 32)
-                                    .padding(.vertical, 10)
-                                    .background(Color.tealPrimary)
-                                    .clipShape(Capsule())
-                            }
-                        }
-                        .padding(24)
-                        .background(Color.rowBackgroundDark)
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
-                    }
-                }
-            }
-            .fullScreenCover(isPresented: $showingHelpMeStart) {
-                HelpMeStartView(
-                    onBack: {
-                        showingHelpMeStart = false
-                    },
-                    onStart: {
-                        showingHelpMeStart = false
-                        startedSession = true
-                    }
-                )
-            }
-        }
-    }
-}
-
 // MARK: - Previews
 
-#Preview("1. All Items Unchecked (Initial)") {
+#Preview("Help Me Start View") {
     HelpMeStartView()
-        .previewInterfaceOrientation(.landscapeLeft)
-        .previewDevice(PreviewDevice(rawValue: "iPad Air 11-inch (M4)"))
-}
-
-#Preview("2. Task Page Navigation Example") {
-    TaskPageNavigationExampleView()
         .previewInterfaceOrientation(.landscapeLeft)
         .previewDevice(PreviewDevice(rawValue: "iPad Air 11-inch (M4)"))
 }
