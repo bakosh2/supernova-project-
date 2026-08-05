@@ -211,10 +211,10 @@ struct SessionTimerRing: View {
                 
                 // Progress Arc
                 Circle()
-                    .trim(from: 0, to: CGFloat(max(0.0, min(1.0, progress))))
+                    .trim(from: 0, to: max(0, min(1, progress)))
                     .stroke(
                         isBreak ? Color.tealPrimary : Color.purpleCheckbox,
-                        style: StrokeStyle(lineWidth: 12, lineCap: .round)
+                        lineWidth: 12
                     )
                     .rotationEffect(.degrees(-90))
                     .animation(.linear(duration: 0.8), value: progress)
