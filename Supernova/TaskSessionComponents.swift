@@ -68,22 +68,14 @@ struct SubtaskProgressSegments: View {
     var body: some View {
         HStack(spacing: 8) {
             ForEach(Array(subtasks.indices.reversed()), id: \.self) { index in
+                let color: Color = index == currentIndex ? Color.purpleCheckbox : (subtasks[index].isCompleted ? Color.purpleCheckbox.opacity(0.75) : Color.gray.opacity(0.22))
+                
                 Capsule()
-                    .fill(segmentColor(for: index))
+                    .fill(color)
                     .frame(maxWidth: .infinity)
                     .frame(height: 6)
             }
         }
-    }
-    
-    private func segmentColor(for index: Int) -> Color {
-        if index == currentIndex {
-            return Color.purpleCheckbox
-        }
-        if index < subtasks.count && subtasks[index].isCompleted {
-            return Color.purpleCheckbox.opacity(0.75)
-        }
-        return Color.gray.opacity(0.22)
     }
 }
 
@@ -93,17 +85,15 @@ struct PreviousSubtaskButton: View {
     let action: () -> Void
     
     var body: some View {
-        Button(action: {
-            if !isDisabled { action() }
-        }) {
+        Button(action: action) {
             ZStack {
                 Circle()
-                    .fill(!isDisabled ? Color.purpleCheckbox : Color(hex: "#D1D1D4"))
+                    .fill(isDisabled ? Color(hex: "#D1D1D4") : Color.purpleCheckbox)
                     .frame(width: 36, height: 36)
                 
                 Image(systemName: "chevron.right")
                     .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(!isDisabled ? .white : Color.white.opacity(0.6))
+                    .foregroundColor(isDisabled ? Color.white.opacity(0.6) : .white)
             }
         }
         .disabled(isDisabled)
@@ -174,9 +164,7 @@ struct FocusTaskCard: View {
             .padding(.bottom, 12)
             
             // Primary Action Button ("المهمة التالية" / "إنهاء المهمة")
-            Button(action: {
-                if canAdvance { onPrimaryAction() }
-            }) {
+            Button(action: onPrimaryAction) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 16)
                         .fill(canAdvance ? Color.tealPrimary : Color.disabledButtonGray)
