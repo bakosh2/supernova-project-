@@ -31,9 +31,6 @@ struct SessionNavigationButton: View {
             .frame(width: 110, height: 42)
             .shadow(color: Color.black.opacity(0.18), radius: 6, x: 0, y: 3)
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel("الخروج من المهمة")
-        .accessibilityAddTraits(.isButton)
     }
 }
 
@@ -60,10 +57,6 @@ struct SubtaskCompletionControl: View {
                 }
             }
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel(isCompleted ? "اكتملت الخطوة" : "لم تكتمل الخطوة")
-        .accessibilityValue(isCompleted ? "محدد" : "غير محدد")
-        .accessibilityAddTraits(.isButton)
     }
 }
 
@@ -114,9 +107,6 @@ struct PreviousSubtaskButton: View {
             }
         }
         .disabled(isDisabled)
-        .buttonStyle(.plain)
-        .accessibilityLabel("الخطوة السابقة")
-        .accessibilityAddTraits(.isButton)
     }
 }
 
@@ -204,8 +194,6 @@ struct FocusTaskCard: View {
                 )
             }
             .disabled(!canAdvance)
-            .buttonStyle(.plain)
-            .accessibilityLabel(actionButtonTitle)
         }
         .padding(32)
         .background(Color.white)
@@ -274,8 +262,6 @@ struct FocusPauseButton: View {
             .clipShape(Capsule())
             .shadow(color: Color.tealPrimary.opacity(0.4), radius: 8, x: 0, y: 4)
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel(isPaused ? "متابعة التركيز" : "إيقاف مؤقت")
     }
 }
 
@@ -324,7 +310,5 @@ struct SkipBreakButton: View {
                 .clipShape(Capsule())
                 .shadow(color: Color.tealPrimary.opacity(0.4), radius: 8, x: 0, y: 4)
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel("تخطي وقت الراحة")
     }
 }
