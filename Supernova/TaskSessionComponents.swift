@@ -273,15 +273,13 @@ struct SkipBreakButton: View {
     let action: () -> Void
     
     var body: some View {
-        Button(action: action) {
-            Text("تخطي وقت الراحة")
-                .font(.system(size: 22, weight: .bold))
-                .foregroundColor(.white)
-                .padding(.horizontal, 32)
-                .padding(.vertical, 14)
-                .background(Color.tealPrimary)
-                .clipShape(Capsule())
-                .shadow(color: Color.tealPrimary.opacity(0.4), radius: 8, x: 0, y: 4)
-        }
+        Button("تخطي وقت الراحة", action: action)
+            .font(.system(size: 22, weight: .bold))
+            .foregroundColor(.white)
+            .padding(.horizontal, 32)
+            .padding(.vertical, 14)
+            .background(Color.tealPrimary)
+            .clipShape(Capsule())
+            .shadow(color: Color.tealPrimary.opacity(0.4), radius: 8, x: 0, y: 4)
     }
 }
