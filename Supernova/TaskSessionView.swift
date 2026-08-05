@@ -128,8 +128,8 @@ struct TaskSessionView: View {
             viewModel.setModelContext(modelContext)
             viewModel.startOrResumeSession()
         }
-        .onChange(of: scenePhase) { oldPhase, newPhase in
-            if newPhase == .inactive || newPhase == .background {
+        .onChange(of: scenePhase) {
+            if scenePhase == .inactive || scenePhase == .background {
                 viewModel.leaveAndSave()
             }
         }
