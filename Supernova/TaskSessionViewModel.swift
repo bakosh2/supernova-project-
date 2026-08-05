@@ -47,8 +47,9 @@ final class TaskSessionViewModel: ObservableObject {
     
     /// Returns currently active subtask
     var currentSubtask: HomeworkSubtask? {
-        if currentSubtaskIndex >= 0 && currentSubtaskIndex < sortedSubtasks.count {
-            return sortedSubtasks[currentSubtaskIndex]
+        let items = sortedSubtasks
+        if currentSubtaskIndex >= 0 && currentSubtaskIndex < items.count {
+            return items[currentSubtaskIndex]
         }
         return nil
     }
@@ -88,9 +89,11 @@ final class TaskSessionViewModel: ObservableObject {
     /// Timer progress fraction from 0.0 to 1.0
     var progress: Double {
         if phase == .breakTime {
-            return task.breakDurationSeconds > 0 ? Double(breakSecondsRemaining) / Double(task.breakDurationSeconds) : 1.0
+            if task.breakDurationSeconds == 0 { return 1.0 }
+            return Double(breakSecondsRemaining) / Double(task.breakDurationSeconds)
         } else {
-            return task.focusDurationSeconds > 0 ? Double(focusSecondsRemaining) / Double(task.focusDurationSeconds) : 1.0
+            if task.focusDurationSeconds == 0 { return 1.0 }
+            return Double(focusSecondsRemaining) / Double(task.focusDurationSeconds)
         }
     }
     
