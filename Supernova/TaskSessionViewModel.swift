@@ -43,9 +43,10 @@ final class TaskSessionViewModel: ObservableObject {
     
     /// Returns currently active subtask
     var currentSubtask: HomeworkSubtask? {
-        let items = sortedSubtasks
-        guard currentSubtaskIndex >= 0 && currentSubtaskIndex < items.count else { return nil }
-        return items[currentSubtaskIndex]
+        if currentSubtaskIndex >= 0 && currentSubtaskIndex < sortedSubtasks.count {
+            return sortedSubtasks[currentSubtaskIndex]
+        }
+        return nil
     }
     
     var isFirstSubtask: Bool {
@@ -53,8 +54,7 @@ final class TaskSessionViewModel: ObservableObject {
     }
     
     var isLastSubtask: Bool {
-        let count = sortedSubtasks.count
-        return count == 0 || currentSubtaskIndex >= (count - 1)
+        currentSubtaskIndex >= (sortedSubtasks.count - 1)
     }
     
     var isCurrentSubtaskCompleted: Bool {
@@ -75,12 +75,7 @@ final class TaskSessionViewModel: ObservableObject {
     
     /// Formatted time MM:SS for current active timer (Focus or Break)
     var formattedTime: String {
-        let totalSeconds: Int
-        if phase == .breakTime {
-            totalSeconds = breakSecondsRemaining
-        } else {
-            totalSeconds = focusSecondsRemaining
-        }
+        let totalSeconds = (phase == .breakTime) ? breakSecondsRemaining : focusSecondsRemaining
         let minutes = max(0, totalSeconds) / 60
         let seconds = max(0, totalSeconds) % 60
         return String(format: "%02d:%02d", minutes, seconds)
@@ -89,11 +84,9 @@ final class TaskSessionViewModel: ObservableObject {
     /// Timer progress fraction from 0.0 to 1.0
     var progress: Double {
         if phase == .breakTime {
-            guard task.breakDurationSeconds > 0 else { return 1.0 }
-            return Double(breakSecondsRemaining) / Double(task.breakDurationSeconds)
+            return task.breakDurationSeconds > 0 ? Double(breakSecondsRemaining) / Double(task.breakDurationSeconds) : 1.0
         } else {
-            guard task.focusDurationSeconds > 0 else { return 1.0 }
-            return Double(focusSecondsRemaining) / Double(task.focusDurationSeconds)
+            return task.focusDurationSeconds > 0 ? Double(focusSecondsRemaining) / Double(task.focusDurationSeconds) : 1.0
         }
     }
     
@@ -189,44 +182,35 @@ final class TaskSessionViewModel: ObservableObject {
     
     func toggleFocusPause() {
         if phase == .focus {
-            pauseFocus()
+            stopTimer()
+            phase = .focusPaused
+            task.phase = .focusPaused
+            saveContext()
         } else if phase == .focusPaused {
-            resumeFocus()
+            phase = .focus
+            task.phase = .focus
+            saveContext()
+            startTimer()
         }
     }
     
-    func pauseFocus() {
-        guard phase == .focus else { return }
-        stopTimer()
-        phase = .focusPaused
-        task.phase = .focusPaused
-        saveContext()
-    }
-    
-    func resumeFocus() {
-        guard phase == .focusPaused else { return }
-        phase = .focus
-        task.phase = .focus
-        saveContext()
-        startTimer()
-    }
-    
     func toggleCurrentSubtaskCompletion() {
-        guard let subtask = currentSubtask else { return }
-        subtask.isCompleted.toggle()
-        saveContext()
+        if let subtask = currentSubtask {
+            subtask.isCompleted.toggle()
+            saveContext()
+        }
     }
     
     func moveToPreviousSubtask() {
-        guard currentSubtaskIndex > 0 else { return }
-        currentSubtaskIndex -= 1
-        task.currentSubtaskIndex = currentSubtaskIndex
-        saveContext()
+        if currentSubtaskIndex > 0 {
+            currentSubtaskIndex -= 1
+            task.currentSubtaskIndex = currentSubtaskIndex
+            saveContext()
+        }
     }
     
     func moveToNextSubtask() {
-        guard isCurrentSubtaskCompleted else { return }
-        if !isLastSubtask {
+        if isCurrentSubtaskCompleted && !isLastSubtask {
             currentSubtaskIndex += 1
             task.currentSubtaskIndex = currentSubtaskIndex
             saveContext()

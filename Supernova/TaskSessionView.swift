@@ -56,9 +56,7 @@ struct TaskSessionView: View {
                                 isBreak: true
                             )
                             
-                            SkipBreakButton(action: {
-                                viewModel.skipBreak()
-                            })
+                            SkipBreakButton(action: { viewModel.skipBreak() })
                             
                             Spacer()
                         }
@@ -75,12 +73,8 @@ struct TaskSessionView: View {
                             isFirstSubtask: viewModel.isFirstSubtask,
                             actionButtonTitle: viewModel.primaryButtonTitle,
                             canAdvance: viewModel.canAdvance,
-                            onToggleCheck: {
-                                viewModel.toggleCurrentSubtaskCompletion()
-                            },
-                            onPreviousSubtask: {
-                                viewModel.moveToPreviousSubtask()
-                            },
+                            onToggleCheck: { viewModel.toggleCurrentSubtaskCompletion() },
+                            onPreviousSubtask: { viewModel.moveToPreviousSubtask() },
                             onPrimaryAction: {
                                 if viewModel.isLastSubtask {
                                     viewModel.finishTask()
@@ -105,9 +99,7 @@ struct TaskSessionView: View {
                             
                             FocusPauseButton(
                                 isPaused: viewModel.isFocusPaused,
-                                action: {
-                                    viewModel.toggleFocusPause()
-                                }
+                                action: { viewModel.toggleFocusPause() }
                             )
                             
                             Spacer()
@@ -121,9 +113,7 @@ struct TaskSessionView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 
                 // Upper-Right Navigation Capsule Button (Leave Session)
-                SessionNavigationButton(action: {
-                    showLeaveConfirmation = true
-                })
+                SessionNavigationButton(action: { showLeaveConfirmation = true })
                 .padding(.top, max(screenHeight * 0.04, 28))
                 .padding(.trailing, max(screenWidth * 0.04, 36))
             }
