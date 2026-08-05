@@ -57,8 +57,12 @@ struct SubtaskProgressSegments: View {
     var body: some View {
         HStack(spacing: 8) {
             ForEach(Array(subtasks.indices.reversed()), id: \.self) { index in
+                let isCurrent = (index == currentIndex)
+                let isDone = (index < subtasks.count && subtasks[index].isCompleted)
+                let color: Color = isCurrent ? Color.purpleCheckbox : (isDone ? Color.purpleCheckbox.opacity(0.75) : Color.gray.opacity(0.22))
+                
                 Capsule()
-                    .fill(index == currentIndex ? Color.purpleCheckbox : (subtasks[index].isCompleted ? Color.purpleCheckbox.opacity(0.75) : Color.gray.opacity(0.22)))
+                    .fill(color)
                     .frame(height: 6)
             }
         }
@@ -102,7 +106,7 @@ struct FocusTaskCard: View {
         VStack(alignment: .trailing, spacing: 20) {
             // Task Title
             Text(taskTitle)
-                .font(.system(size: 32, weight: .bold, design: .rounded))
+                .font(.system(size: 32, weight: .bold))
                 .foregroundColor(Color(hex: "#1E264F"))
                 .environment(\.layoutDirection, .rightToLeft)
                 .frame(maxWidth: .infinity, alignment: .trailing)
@@ -117,7 +121,7 @@ struct FocusTaskCard: View {
                 Spacer()
                 
                 Text(subtaskTitle)
-                    .font(.system(size: 24, weight: .semibold, design: .rounded))
+                    .font(.system(size: 24, weight: .semibold))
                     .foregroundColor(Color(hex: "#1E264F"))
                     .multilineTextAlignment(.trailing)
                     .environment(\.layoutDirection, .rightToLeft)
@@ -149,7 +153,7 @@ struct FocusTaskCard: View {
             // Primary Action Button ("المهمة التالية" / "إنهاء المهمة")
             Button(action: onPrimaryAction) {
                 Text(actionButtonTitle)
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .font(.system(size: 24, weight: .bold))
                     .foregroundColor(canAdvance ? .white : Color.white.opacity(0.85))
                     .frame(maxWidth: .infinity)
                     .frame(height: 60)
@@ -181,7 +185,7 @@ struct SessionTimerRing: View {
     var body: some View {
         VStack(spacing: 20) {
             Text(title)
-                .font(.system(size: 40, weight: .bold, design: .rounded))
+                .font(.system(size: 40, weight: .bold))
                 .foregroundColor(.white)
                 .environment(\.layoutDirection, .rightToLeft)
             
@@ -202,7 +206,7 @@ struct SessionTimerRing: View {
                 
                 // MM:SS Time Text
                 Text(formattedTime)
-                    .font(.system(size: 56, weight: .bold, design: .rounded))
+                    .font(.system(size: 56, weight: .bold))
                     .foregroundColor(.white)
             }
             .frame(width: 280, height: 280)
@@ -217,14 +221,19 @@ struct FocusPauseButton: View {
     
     var body: some View {
         Button(action: action) {
-            Label(isPaused ? "متابعة" : "إيقاف مؤقت", systemImage: isPaused ? "play.fill" : "pause.fill")
-                .font(.system(size: 22, weight: .bold, design: .rounded))
-                .foregroundColor(.white)
-                .padding(.horizontal, 32)
-                .padding(.vertical, 14)
-                .background(Color.tealPrimary)
-                .clipShape(Capsule())
-                .shadow(color: Color.tealPrimary.opacity(0.4), radius: 8, x: 0, y: 4)
+            HStack(spacing: 10) {
+                Image(systemName: isPaused ? "play.fill" : "pause.fill")
+                    .font(.system(size: 18, weight: .bold))
+                
+                Text(isPaused ? "متابعة" : "إيقاف مؤقت")
+                    .font(.system(size: 22, weight: .bold))
+            }
+            .foregroundColor(.white)
+            .padding(.horizontal, 32)
+            .padding(.vertical, 14)
+            .background(Color.tealPrimary)
+            .clipShape(Capsule())
+            .shadow(color: Color.tealPrimary.opacity(0.4), radius: 8, x: 0, y: 4)
         }
     }
 }
@@ -234,7 +243,7 @@ struct BreakEncouragementCard: View {
     var body: some View {
         VStack(spacing: 0) {
             Text("أحسنت!")
-                .font(.system(size: 50, weight: .bold, design: .rounded))
+                .font(.system(size: 50, weight: .bold))
                 .foregroundColor(Color(hex: "#1E264F"))
                 .environment(\.layoutDirection, .rightToLeft)
             
@@ -245,7 +254,7 @@ struct BreakEncouragementCard: View {
                 .frame(maxHeight: 400)
             
             Text("حان الوقت ليرتاح عقلك قليلًا.")
-                .font(.system(size: 40, weight: .semibold, design: .rounded))
+                .font(.system(size: 40, weight: .semibold))
                 .foregroundColor(Color(hex: "#1E264F"))
                 .multilineTextAlignment(.center)
                 .lineSpacing(12)
@@ -264,13 +273,15 @@ struct SkipBreakButton: View {
     let action: () -> Void
     
     var body: some View {
-        Button("تخطي وقت الراحة", action: action)
-            .font(.system(size: 22, weight: .bold, design: .rounded))
-            .foregroundColor(.white)
-            .padding(.horizontal, 32)
-            .padding(.vertical, 14)
-            .background(Color.tealPrimary)
-            .clipShape(Capsule())
-            .shadow(color: Color.tealPrimary.opacity(0.4), radius: 8, x: 0, y: 4)
+        Button(action: action) {
+            Text("تخطي وقت الراحة")
+                .font(.system(size: 22, weight: .bold))
+                .foregroundColor(.white)
+                .padding(.horizontal, 32)
+                .padding(.vertical, 14)
+                .background(Color.tealPrimary)
+                .clipShape(Capsule())
+                .shadow(color: Color.tealPrimary.opacity(0.4), radius: 8, x: 0, y: 4)
+        }
     }
 }
