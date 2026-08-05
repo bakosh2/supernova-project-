@@ -262,10 +262,6 @@ final class TaskSessionViewModel: ObservableObject {
         onTaskCompleted?(task.id)
     }
     
-    func finishTask() {
-        requestTaskCompletion()
-    }
-    
     func leaveAndSave() {
         stopTimer()
         saveContext()
