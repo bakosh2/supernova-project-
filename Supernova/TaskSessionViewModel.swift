@@ -17,6 +17,10 @@ final class TaskSessionViewModel: ObservableObject {
     @Published var currentSubtaskIndex: Int
     @Published var focusSecondsRemaining: Int
     @Published var breakSecondsRemaining: Int
+    @Published var shouldShowCompletion: Bool = false
+    
+    var onPINRequired: ((HomeworkTask) -> Void)?
+    var onTaskCompleted: ((UUID) -> Void)?
     
     private var timer: Timer?
     private var secondsSinceLastSave: Int = 0
@@ -227,13 +231,36 @@ final class TaskSessionViewModel: ObservableObject {
         startTimer()
     }
     
-    func finishTask() {
+    // A future parent-PIN screen will handle verification,
+    // then call completeTaskAfterAuthorization().
+    func requestTaskCompletion() {
         stopTimer()
+        saveContext()
+        
+        if task.requiresCompletionPIN {
+            onPINRequired?(task)
+        } else {
+            completeTaskAfterAuthorization()
+        }
+    }
+    
+    func completeTaskAfterAuthorization() {
+        guard !task.isCompleted else { return }
+        
+        stopTimer()
+        
         phase = .completed
         task.phase = .completed
         task.isCompleted = true
         task.completedAt = .now
         saveContext()
+        
+        shouldShowCompletion = true
+        onTaskCompleted?(task.id)
+    }
+    
+    func finishTask() {
+        requestTaskCompletion()
     }
     
     func leaveAndSave() {

@@ -10,6 +10,7 @@ import SwiftData
 struct TaskSessionView: View {
     let task: HomeworkTask
     var onExit: () -> Void = {}
+    var onPINRequired: (HomeworkTask) -> Void = { _ in }
     var onTaskCompleted: (UUID) -> Void = { _ in }
     
     @StateObject private var viewModel: TaskSessionViewModel
@@ -20,12 +21,18 @@ struct TaskSessionView: View {
     init(
         task: HomeworkTask,
         onExit: @escaping () -> Void = {},
+        onPINRequired: @escaping (HomeworkTask) -> Void = { _ in },
         onTaskCompleted: @escaping (UUID) -> Void = { _ in }
     ) {
         self.task = task
         self.onExit = onExit
+        self.onPINRequired = onPINRequired
         self.onTaskCompleted = onTaskCompleted
-        _viewModel = StateObject(wrappedValue: TaskSessionViewModel(task: task))
+        
+        let vm = TaskSessionViewModel(task: task)
+        vm.onPINRequired = onPINRequired
+        vm.onTaskCompleted = onTaskCompleted
+        _viewModel = StateObject(wrappedValue: vm)
     }
     
     var body: some View {
@@ -77,8 +84,7 @@ struct TaskSessionView: View {
                             onPreviousSubtask: { viewModel.moveToPreviousSubtask() },
                             onPrimaryAction: {
                                 if viewModel.isLastSubtask {
-                                    viewModel.finishTask()
-                                    onTaskCompleted(task.id)
+                                    viewModel.requestTaskCompletion()
                                 } else {
                                     viewModel.moveToNextSubtask()
                                 }
@@ -142,6 +148,12 @@ struct TaskSessionView: View {
             Button("البقاء", role: .cancel) {}
         } message: {
             Text("سيتم حفظ وقتك وتقدمك، ويمكنك المتابعة لاحقًا.")
+        }
+        .fullScreenCover(isPresented: $viewModel.shouldShowCompletion) {
+            TaskCompletionView(task: task) {
+                viewModel.shouldShowCompletion = false
+                onExit()
+            }
         }
         .ignoresSafeArea(.all, edges: .bottom)
     }
