@@ -130,10 +130,8 @@ final class TaskSessionViewModel: ObservableObject {
     private func startTimer() {
         stopTimer()
         
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            Task { @MainActor in
-                self?.handleTimerTick()
-            }
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            self.handleTimerTick()
         }
     }
     
