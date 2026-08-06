@@ -6,3 +6,6 @@ xcuserdata/
 DerivedData/
 *.moved-aside
 *.xcuserstate
+
+# Exclude spec files
+*specs*
