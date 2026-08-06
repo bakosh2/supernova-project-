@@ -7,14 +7,22 @@ import SwiftUI
 
 /// Main native SwiftUI screen for "ساعدني أبدأ" (Help Me Start) on iPadOS landscape.
 struct HelpMeStartView: View {
+    let task: HomeworkTask?
+    var onBack: () -> Void = {}
+    var onStart: (HomeworkTask) -> Void = { _ in }
+    
     @StateObject private var viewModel = HelpMeStartViewModel()
     @Environment(\.dismiss) private var dismiss
     
-    /// Optional closure executed when the back button is pressed.
-    var onBack: (() -> Void)?
-    
-    /// Closure executed when "يلا نبدأ!" is pressed.
-    var onStart: (() -> Void)?
+    init(
+        task: HomeworkTask? = nil,
+        onBack: @escaping () -> Void = {},
+        onStart: @escaping (HomeworkTask) -> Void = { _ in }
+    ) {
+        self.task = task
+        self.onBack = onBack
+        self.onStart = onStart
+    }
     
     var body: some View {
         GeometryReader { geometry in
@@ -69,7 +77,19 @@ struct HelpMeStartView: View {
                     HelpMeStartButton(
                         isEnabled: viewModel.allItemsChecked,
                         action: {
-                            onStart?()
+                            if let task = task {
+                                onStart(task)
+                            } else {
+                                let fallbackTask = HomeworkTask.createFromTaskCreation(
+                                    title: "واجب جديد",
+                                    focusDurationMinutes: 10,
+                                    breakDurationMinutes: 5,
+                                    validityDays: 1,
+                                    stepTitles: ["حل الأسئلة"],
+                                    requiresCompletionPIN: false
+                                )!
+                                onStart(fallbackTask)
+                            }
                         }
                     )
                     .frame(width: min(contentWidth * 0.88, 440))
@@ -80,11 +100,7 @@ struct HelpMeStartView: View {
                 
                 // Upper-Right Back Button (Teal Capsule)
                 BackCapsuleButton(action: {
-                    if let onBack = onBack {
-                        onBack()
-                    } else {
-                        dismiss()
-                    }
+                    onBack()
                 })
                 .padding(.top, max(screenHeight * 0.04, 28))
                 .padding(.trailing, max(screenWidth * 0.04, 36))
@@ -116,10 +132,165 @@ struct HelpMeStartView: View {
     }
 }
 
+// MARK: - Task Flow Container
+// A future child-main navigation will manage opening TaskFlowView.
+
+struct TaskFlowView: View {
+    enum TaskFlowScreen {
+        case helpMeStart
+        case taskSession
+        case completion
+    }
+    
+    let task: HomeworkTask
+    let onExitToMain: () -> Void
+    let onPINRequired: (HomeworkTask) -> Void
+    
+    @State private var currentScreen: TaskFlowScreen
+    
+    init(
+        task: HomeworkTask,
+        onExitToMain: @escaping () -> Void,
+        onPINRequired: @escaping (HomeworkTask) -> Void = { _ in }
+    ) {
+        self.task = task
+        self.onExitToMain = onExitToMain
+        self.onPINRequired = onPINRequired
+        
+        let startingScreen: TaskFlowScreen
+        if task.isCompleted {
+            startingScreen = .completion
+        } else if task.phase == .notStarted {
+            startingScreen = .helpMeStart
+        } else {
+            startingScreen = .taskSession
+        }
+        
+        _currentScreen = State(initialValue: startingScreen)
+    }
+    
+    var body: some View {
+        switch currentScreen {
+        case .helpMeStart:
+            HelpMeStartView(
+                task: task,
+                onBack: {
+                    onExitToMain()
+                },
+                onStart: { _ in
+                    currentScreen = .taskSession
+                }
+            )
+            
+        case .taskSession:
+            TaskSessionView(
+                task: task,
+                onExit: {
+                    onExitToMain()
+                },
+                onPINRequired: { selectedTask in
+                    onPINRequired(selectedTask)
+                },
+                onTaskCompleted: { completedTaskID in
+                    guard completedTaskID == task.id else { return }
+                    currentScreen = .completion
+                }
+            )
+            
+        case .completion:
+            TaskCompletionView(
+                task: task,
+                onClose: {
+                    onExitToMain()
+                }
+            )
+        }
+    }
+}
+
 // MARK: - Previews
 
 #Preview("Help Me Start View") {
     HelpMeStartView()
+        .previewInterfaceOrientation(.landscapeLeft)
+        .previewDevice(PreviewDevice(rawValue: "iPad Air 11-inch (M4)"))
+}
+
+#Preview("1. Flow - New Task (Help Me Start)") {
+    let sampleTask = HomeworkTask.createFromTaskCreation(
+        title: "واجب العلوم",
+        focusDurationMinutes: 10,
+        breakDurationMinutes: 5,
+        validityDays: 1,
+        stepTitles: ["قراءة الدرس", "حل الأسئلة"],
+        requiresCompletionPIN: false
+    )!
+    
+    TaskFlowView(task: sampleTask, onExitToMain: {})
+        .previewInterfaceOrientation(.landscapeLeft)
+        .previewDevice(PreviewDevice(rawValue: "iPad Air 11-inch (M4)"))
+}
+
+#Preview("2. Flow - Started Focus Task") {
+    let sampleTask = HomeworkTask.createFromTaskCreation(
+        title: "واجب الرياضيات",
+        focusDurationMinutes: 10,
+        breakDurationMinutes: 5,
+        validityDays: 1,
+        stepTitles: ["حل تمارين ص ١٥"],
+        requiresCompletionPIN: false
+    )!
+    sampleTask.phase = .focus
+    
+    return TaskFlowView(task: sampleTask, onExitToMain: {})
+        .previewInterfaceOrientation(.landscapeLeft)
+        .previewDevice(PreviewDevice(rawValue: "iPad Air 11-inch (M4)"))
+}
+
+#Preview("3. Flow - Saved Break Task") {
+    let sampleTask = HomeworkTask.createFromTaskCreation(
+        title: "واجب لغتي",
+        focusDurationMinutes: 10,
+        breakDurationMinutes: 5,
+        validityDays: 1,
+        stepTitles: ["كتابة النص"],
+        requiresCompletionPIN: false
+    )!
+    sampleTask.phase = .breakTime
+    
+    return TaskFlowView(task: sampleTask, onExitToMain: {})
+        .previewInterfaceOrientation(.landscapeLeft)
+        .previewDevice(PreviewDevice(rawValue: "iPad Air 11-inch (M4)"))
+}
+
+#Preview("4. Flow - Completed Task") {
+    let sampleTask = HomeworkTask.createFromTaskCreation(
+        title: "واجب الإنجليزي",
+        focusDurationMinutes: 10,
+        breakDurationMinutes: 5,
+        validityDays: 1,
+        stepTitles: ["حفظ الكلمات"],
+        requiresCompletionPIN: false
+    )!
+    sampleTask.isCompleted = true
+    sampleTask.phase = .completed
+    
+    return TaskFlowView(task: sampleTask, onExitToMain: {})
+        .previewInterfaceOrientation(.landscapeLeft)
+        .previewDevice(PreviewDevice(rawValue: "iPad Air 11-inch (M4)"))
+}
+
+#Preview("5. Flow - Future PIN Required Task") {
+    let sampleTask = HomeworkTask.createFromTaskCreation(
+        title: "واجب مع رمز الوالدين",
+        focusDurationMinutes: 10,
+        breakDurationMinutes: 5,
+        validityDays: 1,
+        stepTitles: ["المهمة الأولى"],
+        requiresCompletionPIN: true
+    )!
+    
+    return TaskFlowView(task: sampleTask, onExitToMain: {})
         .previewInterfaceOrientation(.landscapeLeft)
         .previewDevice(PreviewDevice(rawValue: "iPad Air 11-inch (M4)"))
 }

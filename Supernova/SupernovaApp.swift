@@ -7,9 +7,23 @@ import SwiftUI
 
 @main
 struct SupernovaApp: App {
+    private let sampleTask: HomeworkTask = {
+        HomeworkTask.createFromTaskCreation(
+            title: "واجب الرياضيات",
+            focusDurationMinutes: 10,
+            breakDurationMinutes: 5,
+            validityDays: 1,
+            stepTitles: ["أكمل المسائل الفردية فقط", "حل سؤال ٤", "تأكد من حلك"],
+            requiresCompletionPIN: false
+        )!
+    }()
+    
     var body: some Scene {
         WindowGroup {
-            HelpMeStartView()
+            TaskFlowView(
+                task: sampleTask,
+                onExitToMain: {}
+            )
         }
     }
 }
