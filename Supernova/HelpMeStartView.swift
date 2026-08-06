@@ -30,7 +30,7 @@ struct HelpMeStartView: View {
                 SpaceBackgroundView()
                 
                 // Centered vertical content column (Title, 3 Checklist Rows, Start Button)
-                VStack(spacing: 0) {
+                VStack(spacing: 30) {
                     // Top area spacing below top bar
                     Spacer()
                         .frame(height: max(screenHeight * 0.08, 40))
@@ -39,7 +39,6 @@ struct HelpMeStartView: View {
                     Text("ساعدني أبدأ")
                         .font(.system(size: min(screenWidth * 0.042, 52), weight: .bold))
                         .foregroundColor(.white)
-                        .multilineTextAlignment(.center)
                         .environment(\.layoutDirection, .rightToLeft)
                         .padding(.bottom, max(screenHeight * 0.04, 28))
                     
@@ -96,20 +95,16 @@ struct HelpMeStartView: View {
                     HStack {
                         ZStack(alignment: .topTrailing) {
                             Image("astronaut 2")
-                                .resizable()
-                                .scaledToFit()
                                 .frame(width: 350)
                                 .shadow(color: Color.black.opacity(0.25), radius: 10, x: 0, y: 5)
                             
                             // Yellow star asset
                             Image("Star")
-                                .resizable()
-                                .scaledToFit()
                                 .frame(width: astronautWidth * 0.4)
                                 .offset(x: -35, y: 60)
                         }
-                        .padding(.leading, max(screenWidth * 0.03, 24))
-                        .padding(.bottom, max(screenHeight * 0.04, 24))
+                        .padding(.leading, max(screenWidth * 0.03, 18))
+                        .padding(.bottom, max(screenHeight * 0.04, 18))
                         
                         Spacer()
                     }

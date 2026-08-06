@@ -1,0 +1,159 @@
+Important correction: do not implement the PIN screen or PIN verification yet.
+
+Another team member will add the parent-PIN feature later.
+
+For this implementation, create only the task-completion celebration screen and prepare one simple integration point for the future PIN flow.
+
+## Current completion behavior
+
+When the child checks the final subtask and presses:
+
+"إنهاء المهمة"
+
+check:
+
+```swift
+task.requiresCompletionPIN
+If requiresCompletionPIN == false
+Complete the task normally:
+Stop the timer.
+Set task.phase = .completed.
+Set task.isCompleted = true.
+Set task.completedAt = .now.
+Update task.lastSavedAt.
+Save the SwiftData ModelContext.
+Show TaskCompletionView.
+If requiresCompletionPIN == true
+Do not mark the task as completed.
+Do not show TaskCompletionView.
+Do not create a PIN interface.
+Instead, call a simple callback that a teammate can connect to the future PIN screen:
+onPINRequired(task)
+Keep:
+The final subtask checked
+The timer stopped or paused
+The task incomplete
+All saved progress unchanged
+The future PIN feature will verify the parent’s code and then call the normal authorized completion method.
+TaskSessionView API
+Use a simple API such as:
+struct TaskSessionView: View {
+    let task: HomeworkTask
+    let onExit: () -> Void
+    let onPINRequired: (HomeworkTask) -> Void
+    let onTaskCompleted: (UUID) -> Void
+}
+Do not add a coordinator, router, PIN manager, or authentication service.
+For previews, provide an empty default callback if necessary:
+onPINRequired: { _ in }
+View-model completion methods
+Use two simple methods:
+func requestTaskCompletion()
+func completeTaskAfterAuthorization()
+Conceptually:
+func requestTaskCompletion() {
+    stopTimer()
+    persistSession()
+
+    if task.requiresCompletionPIN {
+        onPINRequired(task)
+    } else {
+        completeTaskAfterAuthorization()
+    }
+}
+And:
+func completeTaskAfterAuthorization() {
+    guard !task.isCompleted else { return }
+
+    stopTimer()
+
+    task.phase = .completed
+    task.isCompleted = true
+    task.completedAt = .now
+    task.lastSavedAt = .now
+
+    persistSession()
+    shouldShowCompletion = true
+    onTaskCompleted(task.id)
+}
+Keep the exact implementation compatible with the current TaskSessionViewModel.
+The future teammate must be able to call:
+viewModel.completeTaskAfterAuthorization()
+only after the parent PIN is verified successfully.
+Do not implement PIN functionality now
+Do not create:
+CompletionPINView
+PIN text fields
+Number-pad input
+PIN alerts
+PIN verification
+CryptoKit code
+PIN hashes
+Plain-text PIN storage
+PIN helper classes
+PIN-related SwiftData properties
+Parent authentication logic
+Keep only the existing:
+requiresCompletionPIN: Bool
+This Boolean is enough for the current integration placeholder.
+Add a brief comment near the callback:
+// A future parent-PIN screen will handle verification,
+// then call completeTaskAfterAuthorization().
+Do not add large TODO sections or placeholder screens.
+TaskCompletionView
+Create only:
+TaskCompletionView.swift
+Use the attached completion-screen reference as the visual source of truth.
+The screen must appear only after the task is genuinely authorized and marked completed.
+It must contain:
+Purple celebration background
+Bright light burst
+Happy yellow star illustration
+Arabic congratulation text
+Upper-right teal close button
+Text:
+"تهانينا لقد فزت بنجمة!"
+The close button should use:
+Image(systemName: "xmark")
+and call an onClose closure.
+Use:
+struct TaskCompletionView: View {
+    let task: HomeworkTask
+    let onClose: () -> Void
+}
+Do not build a reward database, points system, achievements system, or star inventory yet.
+Completion navigation
+For a task without a PIN:
+Final subtask checked
+→ Press "إنهاء المهمة"
+→ Save task as completed
+→ Show TaskCompletionView
+For a PIN-protected task:
+Final subtask checked
+→ Press "إنهاء المهمة"
+→ Call onPINRequired(task)
+→ Do not complete task
+→ Do not show TaskCompletionView
+Later, the teammate’s PIN screen will perform:
+Correct PIN
+→ call completeTaskAfterAuthorization()
+→ show TaskCompletionView
+Simple student-code requirement
+Keep the code simple and student-friendly.
+Use:
+One completion view
+One Boolean controlling its presentation
+One completion-request method
+One authorized-completion method
+One future PIN callback
+Do not over-engineer the feature.
+Avoid:
+Coordinators
+Routers
+Protocols
+Repositories
+Dependency injection
+Authentication services
+Complex navigation systems
+Extra manager classes
+The code should be easy for a university student to read, modify, and explain.

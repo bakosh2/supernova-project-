@@ -34,15 +34,14 @@ struct BackCapsuleButton: View {
         Button(action: action) {
             Image(systemName: "chevron.right")
                 .font(.system(size: 18, weight: .bold))
-                .foregroundColor(Color(hex: "#1E264F"))
+                .foregroundColor(.white)
                 .frame(width: 110, height: 42)
                 .background(Color.tealPrimary)
                 .clipShape(Capsule())
                 .overlay(
                     Capsule()
-                        .stroke(Color.white.opacity(0.35), lineWidth: 1)
+                        .stroke(Color.white.opacity(0.35))
                 )
-                .shadow(color: Color.black.opacity(0.18), radius: 6, x: 0, y: 3)
         }
     }
 }
