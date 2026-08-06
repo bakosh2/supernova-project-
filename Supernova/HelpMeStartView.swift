@@ -79,16 +79,6 @@ struct HelpMeStartView: View {
                         action: {
                             if let task = task {
                                 onStart(task)
-                            } else {
-                                let fallbackTask = HomeworkTask.createFromTaskCreation(
-                                    title: "واجب جديد",
-                                    focusDurationMinutes: 10,
-                                    breakDurationMinutes: 5,
-                                    validityDays: 1,
-                                    stepTitles: ["حل الأسئلة"],
-                                    requiresCompletionPIN: false
-                                )!
-                                onStart(fallbackTask)
                             }
                         }
                     )
@@ -211,7 +201,16 @@ struct TaskFlowView: View {
 // MARK: - Previews
 
 #Preview("Help Me Start View") {
-    HelpMeStartView()
+    let sampleTask = HomeworkTask.createFromTaskCreation(
+        title: "واجب الرياضيات",
+        focusDurationMinutes: 10,
+        breakDurationMinutes: 5,
+        validityDays: 1,
+        stepTitles: ["حل تمارين ص ١٥"],
+        requiresCompletionPIN: false
+    )!
+    
+    return HelpMeStartView(task: sampleTask)
         .previewInterfaceOrientation(.landscapeLeft)
         .previewDevice(PreviewDevice(rawValue: "iPad Air 11-inch (M4)"))
 }
@@ -226,7 +225,7 @@ struct TaskFlowView: View {
         requiresCompletionPIN: false
     )!
     
-    TaskFlowView(task: sampleTask, onExitToMain: {})
+    return TaskFlowView(task: sampleTask, onExitToMain: {})
         .previewInterfaceOrientation(.landscapeLeft)
         .previewDevice(PreviewDevice(rawValue: "iPad Air 11-inch (M4)"))
 }
