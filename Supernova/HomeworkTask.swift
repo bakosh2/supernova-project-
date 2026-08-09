@@ -6,6 +6,34 @@
 import Foundation
 import SwiftData
 
+/// Represents the current phase of a task session.
+enum TaskSessionPhase: String, Codable {
+    case notStarted
+    case focus
+    case focusPaused
+    case breakTime
+    case completed
+}
+
+/// SwiftData model representing a subtask step within a HomeworkTask.
+@Model
+final class HomeworkSubtask {
+    var id: UUID
+    var title: String
+    var orderIndex: Int
+    var isCompleted: Bool
+    
+    var task: HomeworkTask?
+    
+    init(id: UUID = UUID(), title: String, orderIndex: Int, isCompleted: Bool = false, task: HomeworkTask? = nil) {
+        self.id = id
+        self.title = title
+        self.orderIndex = orderIndex
+        self.isCompleted = isCompleted
+        self.task = task
+    }
+}
+
 /// SwiftData model representing a student homework task with focus/break session state.
 @Model
 final class HomeworkTask {
