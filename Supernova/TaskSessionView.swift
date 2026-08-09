@@ -5,6 +5,34 @@
 
 import SwiftUI
 import SwiftData
+import AVFoundation
+import Combine
+
+// MARK: - Arabic Speech Manager (Text-to-Speech)
+
+@MainActor
+final class ArabicSpeechManager: ObservableObject {
+    private let synthesizer = AVSpeechSynthesizer()
+    
+    /// Reads text aloud in Arabic at rate 0.45, stopping any current speech first.
+    func speak(_ text: String) {
+        stop()
+        let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedText.isEmpty else { return }
+        
+        let utterance = AVSpeechUtterance(string: trimmedText)
+        utterance.voice = AVSpeechSynthesisVoice(language: "ar-SA")
+        utterance.rate = 0.65
+        synthesizer.speak(utterance)
+    }
+    
+    /// Immediately stops active speech output.
+    func stop() {
+        if synthesizer.isSpeaking {
+            synthesizer.stopSpeaking(at: .immediate)
+        }
+    }
+}
 
 // MARK: - Navigation Capsule Button
 struct SessionNavigationButton: View {
@@ -101,6 +129,7 @@ struct FocusTaskCard: View {
     
     let onToggleCheck: () -> Void
     let onPreviousSubtask: () -> Void
+    let onSpeakSubtask: () -> Void
     let onPrimaryAction: () -> Void
     
     var body: some View {
@@ -117,9 +146,20 @@ struct FocusTaskCard: View {
             
             Spacer()
             
-            // Current Subtask Row (Arabic text aligned right, check control on the right)
+            // Current Subtask Row (Subtask Title, Check Control, and Arabic Speaker Button)
             HStack(spacing: 16) {
                 Spacer()
+                
+                // Small speaker button for reading current subtask title in Arabic
+                Button(action: onSpeakSubtask) {
+                    Image(systemName: "speaker.wave.2.fill")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.white)
+                        .frame(width: 38, height: 38)
+                        .background(Color.purpleCheckbox)
+                        .clipShape(Circle())
+                        .shadow(color: Color.purpleCheckbox.opacity(0.35), radius: 4, x: 0, y: 2)
+                }
                 
                 Text(subtaskTitle)
                     .font(.system(size: 24, weight: .semibold))
@@ -443,6 +483,8 @@ struct TaskSessionView: View {
     var verifyCompletionPIN: (String) -> Bool = { _ in false }
     
     @StateObject private var viewModel: TaskSessionViewModel
+    @StateObject private var speechManager = ArabicSpeechManager()
+    
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
     @State private var showLeaveConfirmation: Bool = false
@@ -498,7 +540,10 @@ struct TaskSessionView: View {
                                 isBreak: true
                             )
                             
-                            SkipBreakButton(action: { viewModel.skipBreak() })
+                            SkipBreakButton(action: {
+                                speechManager.stop()
+                                viewModel.skipBreak()
+                            })
                             
                             Spacer()
                         }
@@ -516,8 +561,17 @@ struct TaskSessionView: View {
                             actionButtonTitle: viewModel.primaryButtonTitle,
                             canAdvance: viewModel.canAdvance,
                             onToggleCheck: { viewModel.toggleCurrentSubtaskCompletion() },
-                            onPreviousSubtask: { viewModel.moveToPreviousSubtask() },
+                            onPreviousSubtask: {
+                                speechManager.stop()
+                                viewModel.moveToPreviousSubtask()
+                            },
+                            onSpeakSubtask: {
+                                if let title = viewModel.currentSubtask?.title {
+                                    speechManager.speak(title)
+                                }
+                            },
                             onPrimaryAction: {
+                                speechManager.stop()
                                 if viewModel.isLastSubtask {
                                     if task.requiresCompletionPIN {
                                         viewModel.stopTimer()
@@ -559,7 +613,10 @@ struct TaskSessionView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 
                 // Upper-Right Navigation Capsule Button (Leave Session)
-                SessionNavigationButton(action: { showLeaveConfirmation = true })
+                SessionNavigationButton(action: {
+                    speechManager.stop()
+                    showLeaveConfirmation = true
+                })
                 .padding(.top, max(screenHeight * 0.04, 28))
                 .padding(.trailing, max(screenWidth * 0.04, 36))
                 
@@ -590,10 +647,12 @@ struct TaskSessionView: View {
         }
         .onChange(of: scenePhase) {
             if scenePhase == .inactive || scenePhase == .background {
+                speechManager.stop()
                 viewModel.leaveAndSave()
             }
         }
         .onDisappear {
+            speechManager.stop()
             viewModel.leaveAndSave()
         }
         .confirmationDialog(
@@ -602,6 +661,7 @@ struct TaskSessionView: View {
             titleVisibility: .visible
         ) {
             Button("الخروج وحفظ التقدم", role: .destructive) {
+                speechManager.stop()
                 viewModel.leaveAndSave()
                 onExit()
             }
@@ -611,6 +671,7 @@ struct TaskSessionView: View {
         }
         .fullScreenCover(isPresented: $viewModel.shouldShowCompletion) {
             TaskCompletionView(task: task) {
+                speechManager.stop()
                 viewModel.shouldShowCompletion = false
                 onExit()
             }
@@ -646,6 +707,7 @@ struct TaskSessionView: View {
     
     private func checkPIN() {
         if verifyCompletionPIN(enteredPIN) {
+            speechManager.stop()
             enteredPIN = ""
             pinHasError = false
             showPINCard = false
