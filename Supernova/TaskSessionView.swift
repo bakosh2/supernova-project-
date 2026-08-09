@@ -12,22 +12,29 @@ struct TaskSessionView: View {
     var onExit: () -> Void = {}
     var onPINRequired: (HomeworkTask) -> Void = { _ in }
     var onTaskCompleted: (UUID) -> Void = { _ in }
+    var verifyCompletionPIN: (String) -> Bool = { _ in false }
     
     @StateObject private var viewModel: TaskSessionViewModel
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
     @State private var showLeaveConfirmation: Bool = false
     
+    @State private var showPINCard: Bool = false
+    @State private var enteredPIN: String = ""
+    @State private var pinHasError: Bool = false
+    
     init(
         task: HomeworkTask,
         onExit: @escaping () -> Void = {},
         onPINRequired: @escaping (HomeworkTask) -> Void = { _ in },
-        onTaskCompleted: @escaping (UUID) -> Void = { _ in }
+        onTaskCompleted: @escaping (UUID) -> Void = { _ in },
+        verifyCompletionPIN: @escaping (String) -> Bool = { _ in false }
     ) {
         self.task = task
         self.onExit = onExit
         self.onPINRequired = onPINRequired
         self.onTaskCompleted = onTaskCompleted
+        self.verifyCompletionPIN = verifyCompletionPIN
         
         let vm = TaskSessionViewModel(task: task)
         vm.onPINRequired = onPINRequired
@@ -84,7 +91,12 @@ struct TaskSessionView: View {
                             onPreviousSubtask: { viewModel.moveToPreviousSubtask() },
                             onPrimaryAction: {
                                 if viewModel.isLastSubtask {
-                                    viewModel.requestTaskCompletion()
+                                    if task.requiresCompletionPIN {
+                                        viewModel.stopTimer()
+                                        showPINCard = true
+                                    } else {
+                                        viewModel.requestTaskCompletion()
+                                    }
                                 } else {
                                     viewModel.moveToNextSubtask()
                                 }
@@ -122,8 +134,28 @@ struct TaskSessionView: View {
                 SessionNavigationButton(action: { showLeaveConfirmation = true })
                 .padding(.top, max(screenHeight * 0.04, 28))
                 .padding(.trailing, max(screenWidth * 0.04, 36))
+                
+                // Parent PIN Card Modal Overlay
+                if showPINCard {
+                    Color.black.opacity(0.35)
+                        .ignoresSafeArea()
+                        .onTapGesture {
+                            closePINCard()
+                        }
+                    
+                    ParentPINCard(
+                        enteredPIN: $enteredPIN,
+                        pinHasError: $pinHasError,
+                        onClose: closePINCard,
+                        onDigitPressed: { digit in addPINDigit(digit) },
+                        onDeletePressed: { deletePINDigit() }
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .transition(.scale.combined(with: .opacity))
+                }
             }
         }
+        .animation(.easeInOut(duration: 0.25), value: showPINCard)
         .onAppear {
             viewModel.setModelContext(modelContext)
             viewModel.startOrResumeSession()
@@ -156,6 +188,44 @@ struct TaskSessionView: View {
             }
         }
         .ignoresSafeArea(.all, edges: .bottom)
+    }
+    
+    // MARK: - Parent PIN Actions
+    
+    private func addPINDigit(_ digit: String) {
+        if pinHasError {
+            pinHasError = false
+        }
+        guard enteredPIN.count < 4 else { return }
+        enteredPIN.append(digit)
+        
+        if enteredPIN.count == 4 {
+            checkPIN()
+        }
+    }
+    
+    private func deletePINDigit() {
+        if !enteredPIN.isEmpty {
+            enteredPIN.removeLast()
+        }
+    }
+    
+    private func closePINCard() {
+        enteredPIN = ""
+        pinHasError = false
+        showPINCard = false
+    }
+    
+    private func checkPIN() {
+        if verifyCompletionPIN(enteredPIN) {
+            enteredPIN = ""
+            pinHasError = false
+            showPINCard = false
+            viewModel.completeTaskAfterAuthorization()
+        } else {
+            enteredPIN = ""
+            pinHasError = true
+        }
     }
 }
 
@@ -221,4 +291,22 @@ struct TaskSessionView: View {
     return TaskSessionView(task: sampleTask)
         .previewInterfaceOrientation(.landscapeLeft)
         .previewDevice(PreviewDevice(rawValue: "iPad Air 11-inch (M4)"))
+}
+
+#Preview("5. Task Requiring Parent PIN (PIN: 1234)") {
+    let sampleTask = HomeworkTask.createFromTaskCreation(
+        title: "واجب الرياضيات المعزز بـ PIN",
+        focusDurationMinutes: 10,
+        breakDurationMinutes: 5,
+        validityDays: 1,
+        stepTitles: ["أكمل السؤال الأخير"],
+        requiresCompletionPIN: true
+    )!
+    
+    return TaskSessionView(
+        task: sampleTask,
+        verifyCompletionPIN: { pin in pin == "1234" }
+    )
+    .previewInterfaceOrientation(.landscapeLeft)
+    .previewDevice(PreviewDevice(rawValue: "iPad Air 11-inch (M4)"))
 }

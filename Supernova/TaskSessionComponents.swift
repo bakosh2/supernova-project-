@@ -283,3 +283,150 @@ struct SkipBreakButton: View {
             .shadow(color: Color.tealPrimary.opacity(0.4), radius: 8, x: 0, y: 4)
     }
 }
+
+// MARK: - Parent PIN Card Modal Component
+struct ParentPINCard: View {
+    @Binding var enteredPIN: String
+    @Binding var pinHasError: Bool
+    let onClose: () -> Void
+    let onDigitPressed: (String) -> Void
+    let onDeletePressed: () -> Void
+    
+    private let rows = [
+        ["1", "2", "3"],
+        ["4", "5", "6"],
+        ["7", "8", "9"]
+    ]
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            // Header Bar: Title and Upper-Right Teal Close Button
+            ZStack(alignment: .topTrailing) {
+                // Title & Subtitle
+                VStack(spacing: 8) {
+                    Text("رمز الوالدين")
+                        .font(.system(size: 34, weight: .bold))
+                        .foregroundColor(.white)
+                        .environment(\.layoutDirection, .rightToLeft)
+                    
+                    Text("أدخل رمز PIN المكوّن من ٤ أرقام للتحقق من الهوية")
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundColor(Color(hex: "#B39DDB"))
+                        .environment(\.layoutDirection, .rightToLeft)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.top, 8)
+                
+                // Upper-Right Close Button
+                Button(action: onClose) {
+                    ZStack {
+                        Capsule()
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.tealPrimary, Color(hex: "#43A8A0")],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                        
+                        Image(systemName: "xmark")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(Color(hex: "#1E264F"))
+                    }
+                    .frame(width: 110, height: 46)
+                }
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 16)
+            
+            // Four White PIN Display Boxes
+            HStack(spacing: 20) {
+                ForEach(0..<4, id: \.self) { index in
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 18)
+                            .fill(Color(hex: "#F5F6FC"))
+                            .frame(width: 85, height: 95)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 18)
+                                    .stroke(
+                                        pinHasError ? Color.red : Color.white.opacity(0.4),
+                                        lineWidth: pinHasError ? 3 : 1
+                                    )
+                            )
+                        
+                        if index < enteredPIN.count {
+                            Circle()
+                                .fill(Color(hex: "#1E264F"))
+                                .frame(width: 22, height: 22)
+                        }
+                    }
+                }
+            }
+            .padding(.vertical, 6)
+            
+            // Keypad Grid (1-9, 0, Delete)
+            VStack(spacing: 14) {
+                ForEach(rows, id: \.self) { row in
+                    HStack(spacing: 24) {
+                        ForEach(row, id: \.self) { digit in
+                            Button(action: { onDigitPressed(digit) }) {
+                                Text(digit)
+                                    .font(.system(size: 32, weight: .bold))
+                                    .foregroundColor(.white)
+                                    .frame(width: 78, height: 78)
+                                    .background(Color.white.opacity(0.12))
+                                    .clipShape(Circle())
+                                    .overlay(
+                                        Circle()
+                                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                    )
+                            }
+                        }
+                    }
+                }
+                
+                // Bottom Keypad Row: Empty Spacer, 0, Delete
+                HStack(spacing: 24) {
+                    Spacer()
+                        .frame(width: 78, height: 78)
+                    
+                    Button(action: { onDigitPressed("0") }) {
+                        Text("0")
+                            .font(.system(size: 32, weight: .bold))
+                            .foregroundColor(.white)
+                            .frame(width: 78, height: 78)
+                            .background(Color.white.opacity(0.12))
+                            .clipShape(Circle())
+                            .overlay(
+                                Circle()
+                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                            )
+                    }
+                    
+                    Button(action: onDeletePressed) {
+                        Image(systemName: "delete.left")
+                            .font(.system(size: 24, weight: .bold))
+                            .foregroundColor(.white)
+                            .frame(width: 78, height: 78)
+                            .background(Color.white.opacity(0.12))
+                            .clipShape(Circle())
+                            .overlay(
+                                Circle()
+                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                            )
+                    }
+                }
+            }
+            .padding(.bottom, 24)
+        }
+        .frame(width: 660)
+        .background(Color(hex: "#1B224B"))
+        .clipShape(RoundedRectangle(cornerRadius: 32))
+        .overlay(
+            RoundedRectangle(cornerRadius: 32)
+                .stroke(Color.tealPrimary.opacity(0.6), lineWidth: 1.5)
+        )
+        .shadow(color: Color.black.opacity(0.4), radius: 24, x: 0, y: 12)
+    }
+}

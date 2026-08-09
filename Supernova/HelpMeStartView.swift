@@ -135,17 +135,20 @@ struct TaskFlowView: View {
     let task: HomeworkTask
     let onExitToMain: () -> Void
     let onPINRequired: (HomeworkTask) -> Void
+    let verifyCompletionPIN: (String) -> Bool
     
     @State private var currentScreen: TaskFlowScreen
     
     init(
         task: HomeworkTask,
         onExitToMain: @escaping () -> Void,
-        onPINRequired: @escaping (HomeworkTask) -> Void = { _ in }
+        onPINRequired: @escaping (HomeworkTask) -> Void = { _ in },
+        verifyCompletionPIN: @escaping (String) -> Bool = { pin in pin == "1234" }
     ) {
         self.task = task
         self.onExitToMain = onExitToMain
         self.onPINRequired = onPINRequired
+        self.verifyCompletionPIN = verifyCompletionPIN
         
         let startingScreen: TaskFlowScreen
         if task.isCompleted {
@@ -184,7 +187,8 @@ struct TaskFlowView: View {
                 onTaskCompleted: { completedTaskID in
                     guard completedTaskID == task.id else { return }
                     currentScreen = .completion
-                }
+                },
+                verifyCompletionPIN: verifyCompletionPIN
             )
             
         case .completion:
