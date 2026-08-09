@@ -13,7 +13,7 @@ struct SessionNavigationButton: View {
         Button(action: action) {
             Image(systemName: "chevron.right")
                 .font(.system(size: 18, weight: .bold))
-                .foregroundColor(Color(hex: "#1E264F"))
+                .foregroundColor(.white)
                 .frame(width: 110, height: 42)
                 .background(Color.tealPrimary)
                 .clipShape(Capsule())
@@ -332,7 +332,7 @@ struct ParentPINCard: View {
                         
                         Image(systemName: "xmark")
                             .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(Color(hex: "#1E264F"))
+                            .foregroundColor(.white)
                     }
                     .frame(width: 110, height: 46)
                 }
