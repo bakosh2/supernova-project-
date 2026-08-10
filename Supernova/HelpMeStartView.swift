@@ -107,7 +107,6 @@ struct HelpChecklistRow: View {
                 
                 ZStack {
                     if isSelected {
-                        // Checked state: filled purple circle with white checkmark
                         Circle()
                             .fill(Color.purpleCheckbox)
                             .frame(width: 32, height: 32)
@@ -116,7 +115,6 @@ struct HelpChecklistRow: View {
                             .font(.system(size: 16, weight: .bold))
                             .foregroundColor(.white)
                     } else {
-                        // Unchecked state: empty circular outline
                         Circle()
                             .stroke(Color.white.opacity(0.5), lineWidth: 2)
                             .frame(width: 30, height: 30)
