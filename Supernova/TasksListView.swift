@@ -7,24 +7,6 @@
 
 import SwiftUI
 
-// MARK: - امتداد اللون من Hex
-
-extension Color {
-    init(hex: String) {
-        let scanner = Scanner(string: hex.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: "#", with: ""))
-        var rgbValue: UInt64 = 0
-        scanner.scanHexInt64(&rgbValue)
-
-        let r = Double((rgbValue & 0xFF0000) >> 16) / 255
-        let g = Double((rgbValue & 0x00FF00) >> 8) / 255
-        let b = Double(rgbValue & 0x0000FF) / 255
-
-        self.init(red: r, green: g, blue: b)
-    }
-}
-
-
-
 // MARK: - View قائمة المهام الرئيسي
 
 struct TasksListView: View {
@@ -40,6 +22,9 @@ struct TasksListView: View {
     
     // المهمة المختارة لعرض تفاصيلها
     @State private var selectedTask: TaskItem?
+    
+    // المهمة الجاري تنفيذها لبدء الجلسة (Help Me Start ➔ Task Session ➔ Task Completion)
+    @State private var activeExecutionTask: HomeworkTask?
     
     // MARK: - الألوان (الباليت: 1E264F - 1E2651 - 4454A9 - B39DDB)
     let backgroundTop = Color(hex: "1E264F")
@@ -124,7 +109,7 @@ struct TasksListView: View {
                         }
                         .padding(.horizontal, 50)
                     }
-                    .frame(maxHeight: .infinity) // تاخذ كل المساحة المتاحة بالصفحة - يبدأ السكرول بس لو المهام فعليًا زادت عن المساحة
+                    .frame(maxHeight: .infinity)
                     
                     Spacer(minLength: 30)
                 }
@@ -161,20 +146,29 @@ struct TasksListView: View {
                 tasks.removeAll { $0.id == task.id }
             }
         }
+        // بدء تنفيذ المهمة (Help Me Start ➔ Focus ➔ Completion) عند الضغط على بطاقة المهمة
+        .fullScreenCover(item: $activeExecutionTask) { task in
+            TaskFlowView(
+                task: task,
+                onExitToMain: {
+                    activeExecutionTask = nil
+                }
+            )
+        }
     }
     
     // MARK: - تصميم بطاقة المهمة الواحدة
     @ViewBuilder
     private func taskCardRow(task: TaskItem) -> some View {
         HStack {
-            // عنوان المهمة (الآن في مكان زر عرض التفاصيل)
+            // عنوان المهمة
             Text(task.title)
                 .font(.system(size: 20, weight: .bold))
                 .foregroundColor(.white)
             
             Spacer()
             
-            // زر عرض التفاصيل (الآن في مكان عنوان المهمة)
+            // زر عرض التفاصيل
             Button(action: {
                 selectedTask = task
             }) {
@@ -203,6 +197,25 @@ struct TasksListView: View {
                 )
         )
         .shadow(color: Color.black.opacity(0.25), radius: 8, x: 0, y: 4)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            startTaskExecution(taskItem: task)
+        }
+    }
+    
+    // تحويل TaskItem إلى HomeworkTask وبدء التنفيذ
+    private func startTaskExecution(taskItem: TaskItem) {
+        let steps = taskItem.steps.isEmpty ? ["أكمل المهمة"] : taskItem.steps
+        if let createdTask = HomeworkTask.createFromTaskCreation(
+            title: taskItem.title,
+            focusDurationMinutes: taskItem.focusMinutes > 0 ? taskItem.focusMinutes : 10,
+            breakDurationMinutes: taskItem.breakMinutes > 0 ? taskItem.breakMinutes : 5,
+            validityDays: 1,
+            stepTitles: steps,
+            requiresCompletionPIN: taskItem.requirePin
+        ) {
+            activeExecutionTask = createdTask
+        }
     }
 }
 

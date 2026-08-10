@@ -26,7 +26,7 @@ struct TaskCreationChoiceView: View {
         ZStack {
 
             // الخلفية الأساسية - صورة من Assets بدل الألوان
-            Image("ImageChoice")
+            Image("Choice")
                 .resizable()
                 .scaledToFill()
                 .ignoresSafeArea()
