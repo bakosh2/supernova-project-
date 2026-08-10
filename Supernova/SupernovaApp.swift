@@ -13,7 +13,7 @@ struct SupernovaApp: App {
         breakDurationMinutes: 5,
         validityDays: 1,
         stepTitles: ["أكمل المسائل الفردية فقط", "حل سؤال ٤", "تأكد من حلك"],
-        requiresCompletionPIN: false
+        requiresCompletionPIN: true
     )!
     
     var body: some Scene {

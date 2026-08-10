@@ -13,18 +13,44 @@ import Combine
 @MainActor
 final class ArabicSpeechManager: ObservableObject {
     private let synthesizer = AVSpeechSynthesizer()
-    
-    /// Reads text aloud in Arabic at rate 0.45, stopping any current speech first.
-    func speak(_ text: String) {
-        stop()
-        let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedText.isEmpty else { return }
         
-        let utterance = AVSpeechUtterance(string: trimmedText)
-        utterance.voice = AVSpeechSynthesisVoice(language: "ar-SA")
-        utterance.rate = 0.65
-        synthesizer.speak(utterance)
-    }
+        /// Maps common homework words to their vocalized versions with Harakat
+        private func addHarakat(to text: String) -> String {
+            let harakatMap: [String: String] = [
+                "حل": "حَلّ",
+                "قراءة": "قِرَاءَة",
+                "كتابة": "كِتَابَة",
+                "سؤال": "سُؤَال",
+                "أسئلة": "أَسْئِلَة",
+                "الدرس": "الدَّرْس",
+                "تمارين": "تَمَارِين",
+                "تأكد": "تَأَكَّد",
+                "واجب": "وَاجِب"
+            ]
+            
+            var spokenText = text
+            for (plainWord, vocalizedWord) in harakatMap {
+                spokenText = spokenText.replacingOccurrences(of: plainWord, with: vocalizedWord)
+            }
+            return spokenText
+        }
+        
+        func speak(_ text: String) {
+            stop()
+            let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmedText.isEmpty else { return }
+            
+            // 1. Convert plain text to vocalized text with Harakat
+            let vocalizedText = addHarakat(to: trimmedText)
+            
+            // 2. Pass vocalized text to Apple Speech Synthesizer
+            let utterance = AVSpeechUtterance(string: vocalizedText)
+            utterance.voice = AVSpeechSynthesisVoice(language: "ar-SA")
+            utterance.rate = 0.50
+            utterance.pitchMultiplier = 1.05
+            
+            synthesizer.speak(utterance)
+        }
     
     /// Immediately stops active speech output.
     func stop() {
