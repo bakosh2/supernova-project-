@@ -232,8 +232,6 @@ final class TaskSessionViewModel: ObservableObject {
         startTimer()
     }
     
-    // A future parent-PIN screen will handle verification,
-    // then call completeTaskAfterAuthorization().
     func requestTaskCompletion() {
         stopTimer()
         saveContext()
@@ -253,7 +251,6 @@ final class TaskSessionViewModel: ObservableObject {
         phase = .completed
         task.phase = .completed
         task.isCompleted = true
-        task.completedAt = .now
         saveContext()
         
         shouldShowCompletion = true
@@ -266,7 +263,6 @@ final class TaskSessionViewModel: ObservableObject {
     }
     
     func saveContext() {
-        task.lastSavedAt = .now
         if let modelContext = modelContext {
             try? modelContext.save()
         }

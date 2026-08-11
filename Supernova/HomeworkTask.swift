@@ -39,13 +39,9 @@ final class HomeworkSubtask {
 final class HomeworkTask {
     var id: UUID
     var title: String
-    //var subject: String?
     
     var focusDurationSeconds: Int
     var breakDurationSeconds: Int
-    
-    var validUntil: Date?
-    var validityRawValue: String?
     
     var requiresCompletionPIN: Bool
     
@@ -58,8 +54,9 @@ final class HomeworkTask {
     var totalFocusSecondsCompleted: Int
     
     var isCompleted: Bool
-    var completedAt: Date?
-    var lastSavedAt: Date
+    
+    var isRewardCollected: Bool = false
+    var createdAt: Date = Date()
     
     @Relationship(deleteRule: .cascade, inverse: \HomeworkSubtask.task)
     var subtasks: [HomeworkSubtask] = []
@@ -67,11 +64,8 @@ final class HomeworkTask {
     init(
         id: UUID = UUID(),
         title: String,
-        //subject: String? = nil,
         focusDurationSeconds: Int,
         breakDurationSeconds: Int,
-        validUntil: Date? = nil,
-        validityRawValue: String? = nil,
         requiresCompletionPIN: Bool = false,
         currentSubtaskIndex: Int = 0,
         sessionPhaseRawValue: String = TaskSessionPhase.notStarted.rawValue,
@@ -79,16 +73,13 @@ final class HomeworkTask {
         breakSecondsRemaining: Int? = nil,
         totalFocusSecondsCompleted: Int = 0,
         isCompleted: Bool = false,
-        completedAt: Date? = nil,
-        lastSavedAt: Date = .now
+        isRewardCollected: Bool = false,
+        createdAt: Date = Date()
     ) {
         self.id = id
         self.title = title
-        //self.subject = subject
         self.focusDurationSeconds = focusDurationSeconds
         self.breakDurationSeconds = breakDurationSeconds
-        self.validUntil = validUntil
-        self.validityRawValue = validityRawValue
         self.requiresCompletionPIN = requiresCompletionPIN
         self.currentSubtaskIndex = currentSubtaskIndex
         self.sessionPhaseRawValue = sessionPhaseRawValue
@@ -96,8 +87,8 @@ final class HomeworkTask {
         self.breakSecondsRemaining = breakSecondsRemaining ?? breakDurationSeconds
         self.totalFocusSecondsCompleted = totalFocusSecondsCompleted
         self.isCompleted = isCompleted
-        self.completedAt = completedAt
-        self.lastSavedAt = lastSavedAt
+        self.isRewardCollected = isRewardCollected
+        self.createdAt = createdAt
     }
     
     /// Computed property for type-safe TaskSessionPhase
@@ -110,7 +101,7 @@ final class HomeworkTask {
         }
     }
     
-    /// Computed property deriving pause status from phase (avoids duplicated boolean state)
+    /// Computed property deriving pause status from phase
     var isFocusPaused: Bool {
         phase == .focusPaused
     }
@@ -120,14 +111,22 @@ final class HomeworkTask {
         subtasks.sorted { $0.orderIndex < $1.orderIndex }
     }
     
+    /// Safe computed property for task subtask completion progress (0.0 to 1.0)
+    var progress: Double {
+        let steps = sortedSubtasks
+        guard !steps.isEmpty else {
+            return isCompleted ? 1.0 : 0.0
+        }
+        let completedCount = steps.filter { $0.isCompleted }.count
+        return Double(completedCount) / Double(steps.count)
+    }
+    
     /// Canonical helper method to create a HomeworkTask from TaskCreationView values.
     static func createFromTaskCreation(
         title: String,
         subject: String? = nil,
         focusDurationMinutes: Int,
         breakDurationMinutes: Int,
-        validityDays: Int,
-        validityRawValue: String? = nil,
         stepTitles: [String],
         requiresCompletionPIN: Bool
     ) -> HomeworkTask? {
@@ -143,15 +142,11 @@ final class HomeworkTask {
         
         let focusSecs = focusDurationMinutes * 60
         let breakSecs = breakDurationMinutes * 60
-        let validUntilDate = Calendar.current.date(byAdding: .day, value: validityDays, to: .now)
         
         let task = HomeworkTask(
             title: trimmedTitle,
-            //subject: subject,
             focusDurationSeconds: focusSecs,
             breakDurationSeconds: breakSecs,
-            validUntil: validUntilDate,
-            validityRawValue: validityRawValue,
             requiresCompletionPIN: requiresCompletionPIN,
             currentSubtaskIndex: 0,
             sessionPhaseRawValue: TaskSessionPhase.notStarted.rawValue,
@@ -159,8 +154,8 @@ final class HomeworkTask {
             breakSecondsRemaining: breakSecs,
             totalFocusSecondsCompleted: 0,
             isCompleted: false,
-            completedAt: nil,
-            lastSavedAt: .now
+            isRewardCollected: false,
+            createdAt: .now
         )
         
         let createdSubtasks = cleanStepTitles.enumerated().map { index, stepTitle in

@@ -373,7 +373,6 @@ struct TaskFlowView: View {
         title: "واجب الرياضيات",
         focusDurationMinutes: 10,
         breakDurationMinutes: 5,
-        validityDays: 1,
         stepTitles: ["حل تمارين ص ١٥"],
         requiresCompletionPIN: false
     )!
@@ -388,7 +387,6 @@ struct TaskFlowView: View {
         title: "واجب العلوم",
         focusDurationMinutes: 10,
         breakDurationMinutes: 5,
-        validityDays: 1,
         stepTitles: ["قراءة الدرس", "حل الأسئلة"],
         requiresCompletionPIN: false
     )!
@@ -403,7 +401,6 @@ struct TaskFlowView: View {
         title: "واجب الرياضيات",
         focusDurationMinutes: 10,
         breakDurationMinutes: 5,
-        validityDays: 1,
         stepTitles: ["حل تمارين ص ١٥"],
         requiresCompletionPIN: false
     )!
@@ -419,7 +416,6 @@ struct TaskFlowView: View {
         title: "واجب لغتي",
         focusDurationMinutes: 10,
         breakDurationMinutes: 5,
-        validityDays: 1,
         stepTitles: ["كتابة النص"],
         requiresCompletionPIN: false
     )!
@@ -435,7 +431,6 @@ struct TaskFlowView: View {
         title: "واجب الإنجليزي",
         focusDurationMinutes: 10,
         breakDurationMinutes: 5,
-        validityDays: 1,
         stepTitles: ["حفظ الكلمات"],
         requiresCompletionPIN: false
     )!
@@ -452,7 +447,6 @@ struct TaskFlowView: View {
         title: "واجب مع رمز الوالدين",
         focusDurationMinutes: 10,
         breakDurationMinutes: 5,
-        validityDays: 1,
         stepTitles: ["المهمة الأولى"],
         requiresCompletionPIN: true
     )!

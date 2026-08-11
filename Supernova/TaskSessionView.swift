@@ -13,44 +13,20 @@ import Combine
 @MainActor
 final class ArabicSpeechManager: ObservableObject {
     private let synthesizer = AVSpeechSynthesizer()
+    
+    /// Reads text aloud in Arabic, stopping any current speech first.
+    func speak(_ text: String) {
+        stop()
+        let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedText.isEmpty else { return }
         
-        /// Maps common homework words to their vocalized versions with Harakat
-        private func addHarakat(to text: String) -> String {
-            let harakatMap: [String: String] = [
-                "حل": "حَلّ",
-                "قراءة": "قِرَاءَة",
-                "كتابة": "كِتَابَة",
-                "سؤال": "سُؤَال",
-                "أسئلة": "أَسْئِلَة",
-                "الدرس": "الدَّرْس",
-                "تمارين": "تَمَارِين",
-                "تأكد": "تَأَكَّد",
-                "واجب": "وَاجِب"
-            ]
-            
-            var spokenText = text
-            for (plainWord, vocalizedWord) in harakatMap {
-                spokenText = spokenText.replacingOccurrences(of: plainWord, with: vocalizedWord)
-            }
-            return spokenText
-        }
+        let utterance = AVSpeechUtterance(string: trimmedText)
+        utterance.voice = AVSpeechSynthesisVoice(language: "ar-SA")
+        utterance.rate = 0.56
         
-        func speak(_ text: String) {
-            stop()
-            let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !trimmedText.isEmpty else { return }
-            
-            // 1. Convert plain text to vocalized text with Harakat
-            let vocalizedText = addHarakat(to: trimmedText)
-            
-            // 2. Pass vocalized text to Apple Speech Synthesizer
-            let utterance = AVSpeechUtterance(string: vocalizedText)
-            utterance.voice = AVSpeechSynthesisVoice(language: "ar-SA")
-            utterance.rate = 0.50
-            utterance.pitchMultiplier = 1.05
-            
-            synthesizer.speak(utterance)
-        }
+        utterance.pitchMultiplier = 1.05
+        synthesizer.speak(utterance)
+    }
     
     /// Immediately stops active speech output.
     func stop() {
@@ -292,7 +268,7 @@ struct FocusPauseButton: View {
                 Image(systemName: isPaused ? "play.fill" : "pause.fill")
                     .font(.system(size: 18, weight: .bold))
                 
-                Text(isPaused ? "متابعة" : "إيقاف مؤقت")
+                Text(isPaused ? "متابعة" : "إيقاف المؤقت")
                     .font(.system(size: 22, weight: .bold))
             }
             .foregroundColor(.white)
@@ -752,7 +728,6 @@ struct TaskSessionView: View {
         title: "واجب الرياضيات",
         focusDurationMinutes: 10,
         breakDurationMinutes: 5,
-        validityDays: 1,
         stepTitles: ["أكمل المسائل الفردية فقط", "حل سؤال ٤", "تأكد من حلك"],
         requiresCompletionPIN: false
     )!
@@ -767,7 +742,6 @@ struct TaskSessionView: View {
         title: "واجب الرياضيات",
         focusDurationMinutes: 10,
         breakDurationMinutes: 5,
-        validityDays: 1,
         stepTitles: ["أكمل المسائل الفردية فقط", "حل سؤال ٤"],
         requiresCompletionPIN: false
     )!
@@ -784,7 +758,6 @@ struct TaskSessionView: View {
         title: "قراءة القصة",
         focusDurationMinutes: 15,
         breakDurationMinutes: 3,
-        validityDays: 1,
         stepTitles: ["قراءة الفصل الأول"],
         requiresCompletionPIN: false
     )!
@@ -799,7 +772,6 @@ struct TaskSessionView: View {
         title: "اختبار دقيقة واحدة",
         focusDurationMinutes: 1,
         breakDurationMinutes: 1,
-        validityDays: 1,
         stepTitles: ["أكمل المسائل الفردية فقط", "حل سؤال ٤", "تأكد من حلك"],
         requiresCompletionPIN: false
     )!
@@ -814,7 +786,6 @@ struct TaskSessionView: View {
         title: "واجب الرياضيات المعزز بـ PIN",
         focusDurationMinutes: 10,
         breakDurationMinutes: 5,
-        validityDays: 1,
         stepTitles: ["أكمل السؤال الأخير"],
         requiresCompletionPIN: true
     )!

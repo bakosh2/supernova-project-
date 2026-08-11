@@ -54,9 +54,8 @@ struct TaskDetailView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.top, 10)
 
-                        // بطاقة المدد والصلاحية
+                        // بطاقة المدد
                         HStack(spacing: 16) {
-                            infoChip(title: "صلاحية المهمة", value: task.validity)
                             infoChip(title: "مدة الإستراحة", value: "\(task.breakMinutes) د")
                             infoChip(title: "مدة التركيز", value: "\(task.focusMinutes) د")
                         }
@@ -74,7 +73,7 @@ struct TaskDetailView: View {
                                     .frame(maxWidth: .infinity, alignment: .trailing)
                             } else {
                                 ForEach(Array(task.steps.enumerated()), id: \.offset) { index, step in
-                                    HStack {
+                                    HStack(spacing: 12) {
                                         Text("\(index + 1)")
                                             .font(.subheadline.bold())
                                             .foregroundColor(.white)
@@ -82,12 +81,12 @@ struct TaskDetailView: View {
                                             .background(accentButton)
                                             .clipShape(Circle())
 
-                                        Spacer()
-
                                         Text(step)
                                             .foregroundColor(.white)
                                             .font(.body)
                                             .multilineTextAlignment(.leading)
+                                        
+                                        Spacer()
                                     }
                                     .padding()
                                     .background(cardBackground)
@@ -195,7 +194,6 @@ struct TaskDetailView: View {
             title: "حل واجب الرياضيات",
             focusMinutes: 20,
             breakMinutes: 2,
-            validity: "يوم",
             steps: ["حل سؤال 1 فقط", "حل سؤال 2 فقط"],
             requirePin: true
         ),

@@ -8,14 +8,6 @@ struct TaskStep: Identifiable {
 
 // MARK: - Enums للخيارات المنسدلة
 
-enum TaskValidity: String, CaseIterable, Identifiable {
-    case day = "يوم"
-    case threeDays = "3 أيام"
-    case week = "أسبوع"
-    
-    var id: String { rawValue }
-}
-
 enum BreakDuration: Int, CaseIterable, Identifiable {
     case one = 1
     case two = 2
@@ -62,7 +54,6 @@ struct TaskCreationView: View {
     
     @State private var focusDuration: FocusDuration = .twenty
     @State private var breakDuration: BreakDuration = .two
-    @State private var validity: TaskValidity = .day
     
     // متغير لنص الخطوة الجديدة التي يكتبها المستخدم
     @State private var newStepText: String = ""
@@ -110,7 +101,6 @@ struct TaskCreationView: View {
             title: trimmedTitle,
             focusMinutes: focusDuration.rawValue,
             breakMinutes: breakDuration.rawValue,
-            validity: validity.rawValue,
             steps: steps.map { $0.text },
             requirePin: requirePin
         )
@@ -120,8 +110,8 @@ struct TaskCreationView: View {
     
     var body: some View {
         ZStack {
-            // خلفية الشاشة الأساسية - صورة من Assets بدل التدرج اللوني
-            Image("Image")
+            // خلفية الشاشة الأساسية - نفس خلفية قائمة جميع المهام (parent-dashboard)
+            Image("parent-dashboard")
                 .resizable()
                 .scaledToFill()
                 .ignoresSafeArea()
@@ -155,50 +145,12 @@ struct TaskCreationView: View {
                 Spacer()
             }
             
-            // المحتوى الرئيسي
-            HStack(spacing: 50) {
-                
-                // 1. ملخص الوقت الجانبي (على اليمين)
-                VStack(alignment: .trailing, spacing: 30) {
-                    
-                    VStack(alignment: .trailing, spacing: 6) {
-                        Text("وقت التركيز :")
-                            .font(.title3)
-                            .foregroundColor(.white)
-                        Text("\(totalFocusTime) د")
-                            .font(.title2)
-                            .bold()
-                            .foregroundColor(.gray)
-                    }
-                    
-                    VStack(alignment: .trailing, spacing: 6) {
-                        Text("الإستراحات :")
-                            .font(.title3)
-                            .foregroundColor(.white)
-                        Text("\(totalBreaksTime) د")
-                            .font(.title2)
-                            .bold()
-                            .foregroundColor(.gray)
-                    }
-                    
-                    VStack(alignment: .trailing, spacing: 6) {
-                        Text("اجمالي الجلسة :")
-                            .font(.title3)
-                            .foregroundColor(.white)
-                        Text("\(totalSessionTime) د")
-                            .font(.title2)
-                            .bold()
-                            .foregroundColor(.gray)
-                    }
-                }
-                .frame(width: 160)
-                
-                // 2. الكارت الداخلي (على اليسار)
-                VStack(spacing: 24) {
+            // المحتوى الرئيسي (الكارت الداخلي لحفظ المهمة)
+            VStack(spacing: 24) {
                     
                     // 1. عنوان المهمة
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("عنوان المهم")
+                        Text("عنوان المهمة")
                             .font(.headline)
                             .foregroundColor(.white)
                         
@@ -214,25 +166,8 @@ struct TaskCreationView: View {
                             .foregroundColor(.white)
                     }
                     
-                    // 2. مدة التركيز والراحة والصلاحية
-                    HStack(alignment: .top, spacing: 15) {
-                        
-                        // صلاحية المهمة
-                        VStack(spacing: 8) {
-                            Text("صلاحية المهمة")
-                                .font(.subheadline)
-                                .foregroundColor(.white)
-                            
-                            Menu {
-                                ForEach(TaskValidity.allCases) { option in
-                                    Button(option.rawValue) {
-                                        validity = option
-                                    }
-                                }
-                            } label: {
-                                dropDownButtonLabel(text: validity.rawValue)
-                            }
-                        }
+                    // 2. مدة التركيز والراحة
+                    HStack(alignment: .top, spacing: 30) {
                         
                         // مدة الإستراحة
                         VStack(spacing: 8) {
@@ -251,6 +186,7 @@ struct TaskCreationView: View {
                                 dropDownButtonLabel(text: breakDuration.label)
                             }
                         }
+                        .frame(maxWidth: .infinity)
                         
                         // مدة التركيز
                         VStack(spacing: 8) {
@@ -268,6 +204,7 @@ struct TaskCreationView: View {
                                 dropDownButtonLabel(text: focusDuration.label)
                             }
                         }
+                        .frame(maxWidth: .infinity)
                     }
                     
                     // 3. قسم إضافة وعرض الخطوات
@@ -384,7 +321,6 @@ struct TaskCreationView: View {
                 )
                 .cornerRadius(35)
                 .shadow(color: .black.opacity(0.4), radius: 20, x: 0, y: 10)
-            }
         }
         .environment(\.layoutDirection, .rightToLeft)
     }
