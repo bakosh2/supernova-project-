@@ -127,6 +127,7 @@ struct TaskChatView: View {
         .padding(.horizontal, 28)
         .frame(height: 84)
         .background(ChatPalette.page.opacity(0.78))
+        .environment(\.layoutDirection, .leftToRight)
     }
 
     private var conversation: some View {
