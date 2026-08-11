@@ -13,19 +13,21 @@ import Combine
 @MainActor
 final class ArabicSpeechManager: ObservableObject {
     private let synthesizer = AVSpeechSynthesizer()
-    
-    /// Reads text aloud in Arabic at rate 0.45, stopping any current speech first.
+
+    /// Reads text aloud in Arabic, stopping any current speech first.
     func speak(_ text: String) {
         stop()
         let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedText.isEmpty else { return }
-        
+
         let utterance = AVSpeechUtterance(string: trimmedText)
         utterance.voice = AVSpeechSynthesisVoice(language: "ar-SA")
-        utterance.rate = 0.65
+        utterance.rate = 0.56
+
+        utterance.pitchMultiplier = 1.05
         synthesizer.speak(utterance)
     }
-    
+
     /// Immediately stops active speech output.
     func stop() {
         if synthesizer.isSpeaking {
@@ -37,7 +39,7 @@ final class ArabicSpeechManager: ObservableObject {
 // MARK: - Navigation Capsule Button
 struct SessionNavigationButton: View {
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
             Image(systemName: "chevron.right")
@@ -59,7 +61,7 @@ struct SessionNavigationButton: View {
 struct SubtaskCompletionControl: View {
     let isCompleted: Bool
     let onTap: () -> Void
-    
+
     var body: some View {
         Button(action: onTap) {
             if isCompleted {
@@ -82,14 +84,14 @@ struct SubtaskCompletionControl: View {
 struct SubtaskProgressSegments: View {
     let subtasks: [HomeworkSubtask]
     let currentIndex: Int
-    
+
     var body: some View {
         HStack(spacing: 8) {
             ForEach(Array(subtasks.indices.reversed()), id: \.self) { index in
                 let isCurrent = (index == currentIndex)
                 let isDone = (index < subtasks.count && subtasks[index].isCompleted)
                 let color: Color = isCurrent ? Color.purpleCheckbox : (isDone ? Color.purpleCheckbox.opacity(0.75) : Color.gray.opacity(0.22))
-                
+
                 Capsule()
                     .fill(color)
                     .frame(height: 6)
@@ -102,7 +104,7 @@ struct SubtaskProgressSegments: View {
 struct PreviousSubtaskButton: View {
     let isDisabled: Bool
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
             Image(systemName: "chevron.right")
@@ -126,12 +128,12 @@ struct FocusTaskCard: View {
     let isFirstSubtask: Bool
     let actionButtonTitle: String
     let canAdvance: Bool
-    
+
     let onToggleCheck: () -> Void
     let onPreviousSubtask: () -> Void
     let onSpeakSubtask: () -> Void
     let onPrimaryAction: () -> Void
-    
+
     var body: some View {
         VStack(alignment: .trailing, spacing: 20) {
             // Task Title
@@ -140,16 +142,16 @@ struct FocusTaskCard: View {
                 .foregroundColor(Color(hex: "#1E264F"))
                 .environment(\.layoutDirection, .rightToLeft)
                 .frame(maxWidth: .infinity, alignment: .trailing)
-            
+
             Divider()
                 .background(Color.gray.opacity(0.3))
-            
+
             Spacer()
-            
+
             // Current Subtask Row (Subtask Title, Check Control, and Arabic Speaker Button)
             HStack(spacing: 16) {
                 Spacer()
-                
+
                 // Small speaker button for reading current subtask title in Arabic
                 Button(action: onSpeakSubtask) {
                     Image(systemName: "speaker.wave.2.fill")
@@ -160,29 +162,29 @@ struct FocusTaskCard: View {
                         .clipShape(Circle())
                         .shadow(color: Color.purpleCheckbox.opacity(0.35), radius: 4, x: 0, y: 2)
                 }
-                
+
                 Text(subtaskTitle)
                     .font(.system(size: 24, weight: .semibold))
                     .foregroundColor(Color(hex: "#1E264F"))
                     .multilineTextAlignment(.trailing)
                     .environment(\.layoutDirection, .rightToLeft)
-                
+
                 SubtaskCompletionControl(
                     isCompleted: isSubtaskCompleted,
                     onTap: onToggleCheck
                 )
             }
             .padding(.vertical, 8)
-            
+
             Spacer()
-            
+
             // Progress Segments (Left) & Previous Button (Right) in explicit LTR container
             HStack(spacing: 12) {
                 SubtaskProgressSegments(
                     subtasks: subtasks,
                     currentIndex: currentIndex
                 )
-                
+
                 PreviousSubtaskButton(
                     isDisabled: isFirstSubtask,
                     action: onPreviousSubtask
@@ -190,7 +192,7 @@ struct FocusTaskCard: View {
             }
             .environment(\.layoutDirection, .leftToRight)
             .padding(.bottom, 12)
-            
+
             // Primary Action Button ("المهمة التالية" / "إنهاء المهمة")
             Button(action: onPrimaryAction) {
                 Text(actionButtonTitle)
@@ -222,19 +224,19 @@ struct SessionTimerRing: View {
     let formattedTime: String
     let progress: Double
     let isBreak: Bool
-    
+
     var body: some View {
         VStack(spacing: 20) {
             Text(title)
                 .font(.system(size: 40, weight: .bold))
                 .foregroundColor(.white)
                 .environment(\.layoutDirection, .rightToLeft)
-            
+
             ZStack {
                 // Background Track
                 Circle()
                     .stroke(Color.rowBackgroundDark.opacity(0.8), lineWidth: 12)
-                
+
                 // Progress Arc
                 Circle()
                     .trim(from: 0, to: max(0, min(1, progress)))
@@ -244,7 +246,7 @@ struct SessionTimerRing: View {
                     )
                     .rotationEffect(.degrees(-90))
                     .animation(.linear(duration: 0.8), value: progress)
-                
+
                 // MM:SS Time Text
                 Text(formattedTime)
                     .font(.system(size: 56, weight: .bold))
@@ -259,14 +261,14 @@ struct SessionTimerRing: View {
 struct FocusPauseButton: View {
     let isPaused: Bool
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
             HStack(spacing: 10) {
                 Image(systemName: isPaused ? "play.fill" : "pause.fill")
                     .font(.system(size: 18, weight: .bold))
-                
-                Text(isPaused ? "متابعة" : "إيقاف مؤقت")
+
+                Text(isPaused ? "متابعة" : "إيقاف المؤقت")
                     .font(.system(size: 22, weight: .bold))
             }
             .foregroundColor(.white)
@@ -287,13 +289,13 @@ struct BreakEncouragementCard: View {
                 .font(.system(size: 50, weight: .bold))
                 .foregroundColor(Color(hex: "#1E264F"))
                 .environment(\.layoutDirection, .rightToLeft)
-            
+
             // Stretching star illustration asset
             Image("stretching_star")
                 .resizable()
                 .scaledToFit()
                 .frame(maxHeight: 400)
-            
+
             Text("حان الوقت ليرتاح عقلك قليلًا.")
                 .font(.system(size: 40, weight: .semibold))
                 .foregroundColor(Color(hex: "#1E264F"))
@@ -312,7 +314,7 @@ struct BreakEncouragementCard: View {
 // MARK: - Skip Break Button
 struct SkipBreakButton: View {
     let action: () -> Void
-    
+
     var body: some View {
         Button("تخطي وقت الراحة", action: action)
             .font(.system(size: 22, weight: .bold))
@@ -332,13 +334,13 @@ struct ParentPINCard: View {
     let onClose: () -> Void
     let onDigitPressed: (String) -> Void
     let onDeletePressed: () -> Void
-    
+
     private let rows = [
         ["1", "2", "3"],
         ["4", "5", "6"],
         ["7", "8", "9"]
     ]
-    
+
     var body: some View {
         VStack(spacing: 20) {
             // Header Bar: Title and Upper-Right Teal Close Button
@@ -349,7 +351,7 @@ struct ParentPINCard: View {
                         .font(.system(size: 34, weight: .bold))
                         .foregroundColor(.white)
                         .environment(\.layoutDirection, .rightToLeft)
-                    
+
                     Text("أدخل رمز PIN المكوّن من ٤ أرقام للتحقق من الهوية")
                         .font(.system(size: 20, weight: .medium))
                         .foregroundColor(Color(hex: "#B39DDB"))
@@ -358,7 +360,7 @@ struct ParentPINCard: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.top, 8)
-                
+
                 // Upper-Right Close Button
                 Button(action: onClose) {
                     ZStack {
@@ -370,7 +372,7 @@ struct ParentPINCard: View {
                                     endPoint: .bottomTrailing
                                 )
                             )
-                        
+
                         Image(systemName: "xmark")
                             .font(.system(size: 20, weight: .bold))
                             .foregroundColor(.white)
@@ -380,7 +382,7 @@ struct ParentPINCard: View {
             }
             .padding(.horizontal, 24)
             .padding(.top, 16)
-            
+
             // Four White PIN Display Boxes
             HStack(spacing: 20) {
                 ForEach(0..<4, id: \.self) { index in
@@ -395,7 +397,7 @@ struct ParentPINCard: View {
                                         lineWidth: pinHasError ? 3 : 1
                                     )
                             )
-                        
+
                         if index < enteredPIN.count {
                             Circle()
                                 .fill(Color(hex: "#1E264F"))
@@ -405,7 +407,7 @@ struct ParentPINCard: View {
                 }
             }
             .padding(.vertical, 6)
-            
+
             // Keypad Grid (1-9, 0, Delete)
             VStack(spacing: 14) {
                 ForEach(rows, id: \.self) { row in
@@ -426,12 +428,12 @@ struct ParentPINCard: View {
                         }
                     }
                 }
-                
+
                 // Bottom Keypad Row: Empty Spacer, 0, Delete
                 HStack(spacing: 24) {
                     Spacer()
                         .frame(width: 78, height: 78)
-                    
+
                     Button(action: { onDigitPressed("0") }) {
                         Text("0")
                             .font(.system(size: 32, weight: .bold))
@@ -444,7 +446,7 @@ struct ParentPINCard: View {
                                     .stroke(Color.white.opacity(0.2), lineWidth: 1)
                             )
                     }
-                    
+
                     Button(action: onDeletePressed) {
                         Image(systemName: "delete.left")
                             .font(.system(size: 24, weight: .bold))
@@ -481,18 +483,18 @@ struct TaskSessionView: View {
     var onPINRequired: (HomeworkTask) -> Void = { _ in }
     var onTaskCompleted: (UUID) -> Void = { _ in }
     var verifyCompletionPIN: (String) -> Bool = { _ in false }
-    
+
     @StateObject private var viewModel: TaskSessionViewModel
     @StateObject private var speechManager = ArabicSpeechManager()
-    
+
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
     @State private var showLeaveConfirmation: Bool = false
-    
+
     @State private var showPINCard: Bool = false
     @State private var enteredPIN: String = ""
     @State private var pinHasError: Bool = false
-    
+
     init(
         task: HomeworkTask,
         onExit: @escaping () -> Void = {},
@@ -505,22 +507,22 @@ struct TaskSessionView: View {
         self.onPINRequired = onPINRequired
         self.onTaskCompleted = onTaskCompleted
         self.verifyCompletionPIN = verifyCompletionPIN
-        
+
         let vm = TaskSessionViewModel(task: task)
         vm.onPINRequired = onPINRequired
         vm.onTaskCompleted = onTaskCompleted
         _viewModel = StateObject(wrappedValue: vm)
     }
-    
+
     var body: some View {
         GeometryReader { geometry in
             let screenWidth = geometry.size.width
             let screenHeight = geometry.size.height
-            
+
             ZStack(alignment: .topTrailing) {
                 // Shared space background
                 SpaceBackgroundView()
-                
+
                 // Main Focus or Break Session Layout
                 HStack(spacing: max(screenWidth * 0.04, 32)) {
                     if viewModel.phase == .breakTime {
@@ -528,23 +530,23 @@ struct TaskSessionView: View {
                         // Left Side: Encouragement Card
                         BreakEncouragementCard()
                             .frame(width: min(screenWidth * 0.44, 520))
-                        
+
                         // Right Side: Break Timer & Skip Button
                         VStack(spacing: 28) {
                             Spacer()
-                            
+
                             SessionTimerRing(
                                 title: "وقت الراحة",
                                 formattedTime: viewModel.formattedTime,
                                 progress: viewModel.progress,
                                 isBreak: true
                             )
-                            
+
                             SkipBreakButton(action: {
                                 speechManager.stop()
                                 viewModel.skipBreak()
                             })
-                            
+
                             Spacer()
                         }
                         .frame(width: min(screenWidth * 0.38, 440))
@@ -585,23 +587,23 @@ struct TaskSessionView: View {
                             }
                         )
                         .frame(width: min(screenWidth * 0.46, 540))
-                        
+
                         // Right Side: Focus Timer & Pause/Resume Button
                         VStack(spacing: 28) {
                             Spacer()
-                            
+
                             SessionTimerRing(
                                 title: "وقت التركيز",
                                 formattedTime: viewModel.formattedTime,
                                 progress: viewModel.progress,
                                 isBreak: false
                             )
-                            
+
                             FocusPauseButton(
                                 isPaused: viewModel.isFocusPaused,
                                 action: { viewModel.toggleFocusPause() }
                             )
-                            
+
                             Spacer()
                         }
                         .frame(width: min(screenWidth * 0.38, 440))
@@ -611,7 +613,7 @@ struct TaskSessionView: View {
                 .padding(.top, max(screenHeight * 0.10, 60))
                 .padding(.bottom, max(screenHeight * 0.05, 30))
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                
+
                 // Upper-Right Navigation Capsule Button (Leave Session)
                 SessionNavigationButton(action: {
                     speechManager.stop()
@@ -619,7 +621,7 @@ struct TaskSessionView: View {
                 })
                 .padding(.top, max(screenHeight * 0.04, 28))
                 .padding(.trailing, max(screenWidth * 0.04, 36))
-                
+
                 // Parent PIN Card Modal Overlay
                 if showPINCard {
                     Color.black.opacity(0.35)
@@ -627,7 +629,7 @@ struct TaskSessionView: View {
                         .onTapGesture {
                             closePINCard()
                         }
-                    
+
                     ParentPINCard(
                         enteredPIN: $enteredPIN,
                         pinHasError: $pinHasError,
@@ -678,33 +680,33 @@ struct TaskSessionView: View {
         }
         .ignoresSafeArea(.all, edges: .bottom)
     }
-    
+
     // MARK: - Parent PIN Actions
-    
+
     private func addPINDigit(_ digit: String) {
         if pinHasError {
             pinHasError = false
         }
         guard enteredPIN.count < 4 else { return }
         enteredPIN.append(digit)
-        
+
         if enteredPIN.count == 4 {
             checkPIN()
         }
     }
-    
+
     private func deletePINDigit() {
         if !enteredPIN.isEmpty {
             enteredPIN.removeLast()
         }
     }
-    
+
     private func closePINCard() {
         enteredPIN = ""
         pinHasError = false
         showPINCard = false
     }
-    
+
     private func checkPIN() {
         if verifyCompletionPIN(enteredPIN) {
             speechManager.stop()
@@ -726,11 +728,10 @@ struct TaskSessionView: View {
         title: "واجب الرياضيات",
         focusDurationMinutes: 10,
         breakDurationMinutes: 5,
-        validityDays: 1,
         stepTitles: ["أكمل المسائل الفردية فقط", "حل سؤال ٤", "تأكد من حلك"],
         requiresCompletionPIN: false
     )!
-    
+
     TaskSessionView(task: sampleTask)
         .previewInterfaceOrientation(.landscapeLeft)
         .previewDevice(PreviewDevice(rawValue: "iPad Air 11-inch (M4)"))
@@ -741,13 +742,12 @@ struct TaskSessionView: View {
         title: "واجب الرياضيات",
         focusDurationMinutes: 10,
         breakDurationMinutes: 5,
-        validityDays: 1,
         stepTitles: ["أكمل المسائل الفردية فقط", "حل سؤال ٤"],
         requiresCompletionPIN: false
     )!
     sampleTask.phase = .breakTime
     sampleTask.breakSecondsRemaining = 300
-    
+
     return TaskSessionView(task: sampleTask)
         .previewInterfaceOrientation(.landscapeLeft)
         .previewDevice(PreviewDevice(rawValue: "iPad Air 11-inch (M4)"))
@@ -758,11 +758,10 @@ struct TaskSessionView: View {
         title: "قراءة القصة",
         focusDurationMinutes: 15,
         breakDurationMinutes: 3,
-        validityDays: 1,
         stepTitles: ["قراءة الفصل الأول"],
         requiresCompletionPIN: false
     )!
-    
+
     return TaskSessionView(task: sampleTask)
         .previewInterfaceOrientation(.landscapeLeft)
         .previewDevice(PreviewDevice(rawValue: "iPad Air 11-inch (M4)"))
@@ -773,11 +772,10 @@ struct TaskSessionView: View {
         title: "اختبار دقيقة واحدة",
         focusDurationMinutes: 1,
         breakDurationMinutes: 1,
-        validityDays: 1,
         stepTitles: ["أكمل المسائل الفردية فقط", "حل سؤال ٤", "تأكد من حلك"],
         requiresCompletionPIN: false
     )!
-    
+
     return TaskSessionView(task: sampleTask)
         .previewInterfaceOrientation(.landscapeLeft)
         .previewDevice(PreviewDevice(rawValue: "iPad Air 11-inch (M4)"))
@@ -788,11 +786,10 @@ struct TaskSessionView: View {
         title: "واجب الرياضيات المعزز بـ PIN",
         focusDurationMinutes: 10,
         breakDurationMinutes: 5,
-        validityDays: 1,
         stepTitles: ["أكمل السؤال الأخير"],
         requiresCompletionPIN: true
     )!
-    
+
     return TaskSessionView(
         task: sampleTask,
         verifyCompletionPIN: { pin in pin == "1234" }

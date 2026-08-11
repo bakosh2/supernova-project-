@@ -12,39 +12,39 @@ import SwiftData
 final class TaskSessionViewModel: ObservableObject {
     let task: HomeworkTask
     private var modelContext: ModelContext?
-    
+
     @Published var phase: TaskSessionPhase
     @Published var currentSubtaskIndex: Int
     @Published var focusSecondsRemaining: Int
     @Published var breakSecondsRemaining: Int
     @Published var shouldShowCompletion: Bool = false
-    
+
     var onPINRequired: ((HomeworkTask) -> Void)?
     var onTaskCompleted: ((UUID) -> Void)?
-    
+
     private var timer: Timer?
     private var secondsSinceLastSave: Int = 0
-    
+
     init(task: HomeworkTask, modelContext: ModelContext? = nil) {
         self.task = task
         self.modelContext = modelContext
-        
+
         self.phase = task.phase
         self.currentSubtaskIndex = task.currentSubtaskIndex
         self.focusSecondsRemaining = task.focusSecondsRemaining
         self.breakSecondsRemaining = task.breakSecondsRemaining
     }
-    
+
     /// Set or update the SwiftData ModelContext for persistence
     func setModelContext(_ context: ModelContext) {
         self.modelContext = context
     }
-    
+
     /// Returns sorted subtasks from the task
     var sortedSubtasks: [HomeworkSubtask] {
         task.sortedSubtasks
     }
-    
+
     /// Returns currently active subtask
     var currentSubtask: HomeworkSubtask? {
         let items = sortedSubtasks
@@ -53,31 +53,31 @@ final class TaskSessionViewModel: ObservableObject {
         }
         return nil
     }
-    
+
     var isFirstSubtask: Bool {
         currentSubtaskIndex == 0
     }
-    
+
     var isLastSubtask: Bool {
         currentSubtaskIndex >= (sortedSubtasks.count - 1)
     }
-    
+
     var isCurrentSubtaskCompleted: Bool {
         currentSubtask?.isCompleted ?? false
     }
-    
+
     var canAdvance: Bool {
         isCurrentSubtaskCompleted
     }
-    
+
     var primaryButtonTitle: String {
         isLastSubtask ? "إنهاء المهمة" : "المهمة التالية"
     }
-    
+
     var isFocusPaused: Bool {
         phase == .focusPaused
     }
-    
+
     /// Formatted time MM:SS for current active timer (Focus or Break)
     var formattedTime: String {
         let totalSeconds = (phase == .breakTime) ? breakSecondsRemaining : focusSecondsRemaining
@@ -85,7 +85,7 @@ final class TaskSessionViewModel: ObservableObject {
         let seconds = max(0, totalSeconds) % 60
         return String(format: "%02d:%02d", minutes, seconds)
     }
-    
+
     /// Timer progress fraction from 0.0 to 1.0
     var progress: Double {
         if phase == .breakTime {
@@ -96,9 +96,9 @@ final class TaskSessionViewModel: ObservableObject {
             return Double(focusSecondsRemaining) / Double(task.focusDurationSeconds)
         }
     }
-    
+
     // MARK: - Session Lifecycle & Timer Management
-    
+
     /// Initializes or resumes session on view appear
     func startOrResumeSession() {
         if task.phase == .notStarted {
@@ -107,7 +107,7 @@ final class TaskSessionViewModel: ObservableObject {
             focusSecondsRemaining = task.focusDurationSeconds
             breakSecondsRemaining = task.breakDurationSeconds
             phase = .focus
-            
+
             task.currentSubtaskIndex = 0
             task.focusSecondsRemaining = task.focusDurationSeconds
             task.breakSecondsRemaining = task.breakDurationSeconds
@@ -125,22 +125,22 @@ final class TaskSessionViewModel: ObservableObject {
             startTimer()
         }
     }
-    
+
     /// Starts single 1-second countdown timer interval
     private func startTimer() {
         stopTimer()
-        
+
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
             self.handleTimerTick()
         }
     }
-    
+
     /// Stops and invalidates active timer
     func stopTimer() {
         timer?.invalidate()
         timer = nil
     }
-    
+
     /// Handles 1-second tick logic
     private func handleTimerTick() {
         if phase == .focus {
@@ -149,7 +149,7 @@ final class TaskSessionViewModel: ObservableObject {
                 task.focusSecondsRemaining = focusSecondsRemaining
                 task.totalFocusSecondsCompleted += 1
                 secondsSinceLastSave += 1
-                
+
                 if secondsSinceLastSave >= 10 {
                     saveContext()
                     secondsSinceLastSave = 0
@@ -167,7 +167,7 @@ final class TaskSessionViewModel: ObservableObject {
                 breakSecondsRemaining -= 1
                 task.breakSecondsRemaining = breakSecondsRemaining
                 secondsSinceLastSave += 1
-                
+
                 if secondsSinceLastSave >= 10 {
                     saveContext()
                     secondsSinceLastSave = 0
@@ -182,9 +182,9 @@ final class TaskSessionViewModel: ObservableObject {
             }
         }
     }
-    
+
     // MARK: - Actions
-    
+
     func toggleFocusPause() {
         if phase == .focus {
             stopTimer()
@@ -198,14 +198,14 @@ final class TaskSessionViewModel: ObservableObject {
             startTimer()
         }
     }
-    
+
     func toggleCurrentSubtaskCompletion() {
         if let subtask = currentSubtask {
             subtask.isCompleted.toggle()
             saveContext()
         }
     }
-    
+
     func moveToPreviousSubtask() {
         if currentSubtaskIndex > 0 {
             currentSubtaskIndex -= 1
@@ -213,7 +213,7 @@ final class TaskSessionViewModel: ObservableObject {
             saveContext()
         }
     }
-    
+
     func moveToNextSubtask() {
         if isCurrentSubtaskCompleted && !isLastSubtask {
             currentSubtaskIndex += 1
@@ -221,7 +221,7 @@ final class TaskSessionViewModel: ObservableObject {
             saveContext()
         }
     }
-    
+
     func skipBreak() {
         stopTimer()
         phase = .focus
@@ -231,42 +231,38 @@ final class TaskSessionViewModel: ObservableObject {
         saveContext()
         startTimer()
     }
-    
-    // A future parent-PIN screen will handle verification,
-    // then call completeTaskAfterAuthorization().
+
     func requestTaskCompletion() {
         stopTimer()
         saveContext()
-        
+
         if task.requiresCompletionPIN {
             onPINRequired?(task)
         } else {
             completeTaskAfterAuthorization()
         }
     }
-    
+
     func completeTaskAfterAuthorization() {
         guard !task.isCompleted else { return }
-        
+
         stopTimer()
-        
+
         phase = .completed
         task.phase = .completed
         task.isCompleted = true
-        task.completedAt = .now
         saveContext()
-        
+
         shouldShowCompletion = true
         onTaskCompleted?(task.id)
     }
-    
+
     func leaveAndSave() {
         stopTimer()
         saveContext()
     }
-    
+
     func saveContext() {
-        task.lastSavedAt = .now
         if let modelContext = modelContext {
             try? modelContext.save()
         }
