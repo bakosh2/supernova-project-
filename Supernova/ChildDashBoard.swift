@@ -566,31 +566,22 @@ struct TodaysMissionsView: View {
     
     private var planet: some View {
         ZStack {
-            Ellipse()
-                .stroke(Color(red: 0.50, green: 0.82, blue: 0.96).opacity(0.75), lineWidth: 10)
-                .frame(width: 176, height: 54)
-                .rotationEffect(.degrees(-18))
-            Circle()
-                .fill(
-                    RadialGradient(
-                        colors: [Color(red: 0.52, green: 0.86, blue: 0.98), Color(red: 0.20, green: 0.42, blue: 0.82)],
-                        center: .topLeading,
-                        startRadius: 5,
-                        endRadius: 76
-                    )
+            Image("planet")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 60, height: 60)
+                .offset(y: floating ? -15 : 15)
+                .animation(
+                    .easeInOut(duration: 2)
+                    .repeatForever(autoreverses: true),
+                    value: floating
                 )
-                .frame(width: 126, height: 126)
-                .overlay(Circle().stroke(Color.white.opacity(0.28), lineWidth: 2))
-                .shadow(color: Color.cyan.opacity(0.45), radius: 18)
+                .onAppear { floating = true }
         }
-        .frame(width: 180, height: 150)
-        .offset(y: floating ? -15 : 15)
-        .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: floating)
-        .onAppear { floating = true }
     }
     
     private var astronaut: some View {
-        Image("astronaut 2")
+        Image("astronaut")
             .resizable()
             .scaledToFit()
             .frame(width: 390, height: 400)
