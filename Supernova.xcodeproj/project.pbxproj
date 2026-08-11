@@ -253,6 +253,10 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsArbitraryLoads = YES;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "يحتاج تطبيق Supernova للاتصال بخدمة مساعد المهام على جهاز التطوير.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "يستخدم Supernova الميكروفون لتحويل وصف المهمة إلى نص.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "يستخدم Supernova التعرّف على الكلام لتحويل وصف المهمة إلى نص.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -284,6 +288,10 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsArbitraryLoads = YES;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "يحتاج تطبيق Supernova للاتصال بخدمة مساعد المهام على جهاز التطوير.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "يستخدم Supernova الميكروفون لتحويل وصف المهمة إلى نص.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "يستخدم Supernova التعرّف على الكلام لتحويل وصف المهمة إلى نص.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
