@@ -16,63 +16,46 @@ struct TaskCreationChoiceView: View {
     var onSave: (TaskItem) -> Void
 
     @State private var goToManual = false
+    @State private var goToSupernova = false
 
     // MARK: - الألوان
 
-    private let teal = Color(hex: "4DB6AC")
+    // One primary button colour used by the parent dashboard and task flow.
+    private let teal = Color(red: 0.20, green: 0.68, blue: 0.58)
     private let titleColor = Color(hex: "EDE7F6")
 
     var body: some View {
-        ZStack {
+        GeometryReader { geometry in
+            let isLandscape = geometry.size.width > geometry.size.height
+            ZStack {
+                Image("Choice")
+                    .resizable()
+                    .scaledToFill()
+                    .ignoresSafeArea()
 
-            // الخلفية الأساسية - صورة من Assets بدل الألوان
-            Image("Choice")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-
-            VStack(spacing: 0) {
-
-                // MARK: المنطقة العلوية
-
-                ZStack {
-
-                    VStack(spacing: 0) {
-
-                        topBar
-
-                        Spacer()
-
-                        Text("اكتب مهمتك لطفلك")
-                            .font(
-                                .system(
-                                    size: 34,
-                                    weight: .bold
-                                )
-                            )
-                            .foregroundColor(titleColor)
-                            .offset(y: -80)
-
-                        Spacer()
-                            .frame(height: 60)
-                    }
+                VStack(spacing: 0) {
+                    topBar
+                    Spacer(minLength: isLandscape ? 46 : 70)
                 }
-                .frame(height: 300)
-                .clipped()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                Spacer()
-            }
+                Text("اكتب مهمتك لطفلك")
+                    .font(.system(size: isLandscape ? 42 : 32, weight: .bold, design: .rounded))
+                    .foregroundColor(titleColor)
+                    .multilineTextAlignment(.center)
+                    .minimumScaleFactor(0.8)
+                    .shadow(color: .black.opacity(0.32), radius: 8, y: 4)
+                    .position(
+                        x: geometry.size.width / 2,
+                        y: geometry.size.height * (isLandscape ? 0.43 : 0.41)
+                    )
 
-            // MARK: خيارات إنشاء المهمة
-
-            VStack {
-
-                Spacer()
-                    .frame(height: 340)
-
-                optionsRow
-
-                Spacer()
+                optionsRow(isLandscape: isLandscape)
+                    .padding(.horizontal, 28)
+                    .position(
+                        x: geometry.size.width / 2,
+                        y: geometry.size.height * (isLandscape ? 0.58 : 0.56)
+                    )
             }
         }
         .fullScreenCover(isPresented: $goToManual) {
@@ -80,6 +63,16 @@ struct TaskCreationChoiceView: View {
                 onSave(newTask)
                 isPresented = false
             }
+        }
+        .fullScreenCover(isPresented: $goToSupernova) {
+            SupernovaAgentChatView(
+                onTaskAdded: { task in
+                    onSave(task)
+                },
+                onClose: {
+                    goToSupernova = false
+                }
+            )
         }
         .environment(\.layoutDirection, .rightToLeft)
     }
@@ -89,66 +82,47 @@ struct TaskCreationChoiceView: View {
     private var topBar: some View {
         HStack {
 
-            Button {
+            BackCapsuleButton {
                 isPresented = false
-            } label: {
-                Image(systemName: "chevron.right")
-                    .font(
-                        .system(
-                            size: 18,
-                            weight: .bold
-                        )
-                    )
-                    .foregroundColor(.white)
-                    .frame(width: 60, height: 40)
-                    .background(teal)
-                    .clipShape(Capsule())
             }
-            .buttonStyle(.plain)
 
             Spacer()
-
-            Button {
-
-            } label: {
-                Text("؟")
-                    .font(
-                        .system(
-                            size: 18,
-                            weight: .bold
-                        )
-                    )
-                    .foregroundColor(.white)
-                    .frame(width: 45, height: 45)
-                    .background(teal)
-                    .clipShape(Circle())
-            }
-            .buttonStyle(.plain)
         }
-        .padding(.horizontal, 35)
-        .padding(.top, 20)
+        .padding(.horizontal, AppHeaderLayout.horizontal)
+        .padding(.top, AppHeaderLayout.top)
+        // Keep the shared back control physically on the left, even in Arabic.
+        .environment(\.layoutDirection, .leftToRight)
     }
 
     // MARK: - خيارات الإنشاء
 
-    private var optionsRow: some View {
-        HStack(spacing: 24) {
-
-            optionButton(
-                icon: "cpu",
-                title: "بمساعدة الذكاء\nالاصطناعي"
-            ) {
-                // اربطيه بواجهة الذكاء الاصطناعي
+    @ViewBuilder
+    private func optionsRow(isLandscape: Bool) -> some View {
+        if isLandscape {
+            HStack(spacing: 24) {
+                aiOption
+                manualOption
             }
-
-            optionButton(
-                icon: "square.and.pencil",
-                title: "يدويًا"
-            ) {
-                goToManual = true
+            .environment(\.layoutDirection, .leftToRight)
+        } else {
+            VStack(spacing: 18) {
+                aiOption
+                manualOption
             }
+            .frame(maxWidth: 380)
         }
-        .environment(\.layoutDirection, .leftToRight)
+    }
+
+    private var aiOption: some View {
+        optionButton(icon: "cpu", title: "بمساعدة الذكاء\nالاصطناعي") {
+            goToSupernova = true
+        }
+    }
+
+    private var manualOption: some View {
+        optionButton(icon: "square.and.pencil", title: "يدويًا") {
+            goToManual = true
+        }
     }
 
     // MARK: - زر الاختيار
@@ -163,11 +137,11 @@ struct TaskCreationChoiceView: View {
 
                 ZStack {
                     Circle()
-                        .stroke(teal, lineWidth: 1.5)
+                        .fill(Color.white.opacity(0.16))
                         .frame(width: 46, height: 46)
 
                     Image(systemName: icon)
-                        .foregroundColor(teal)
+                        .foregroundColor(.white)
                         .font(
                             .system(
                                 size: 18,
@@ -183,8 +157,8 @@ struct TaskCreationChoiceView: View {
                             weight: .bold
                         )
                     )
-                    .foregroundColor(teal)
-                    .multilineTextAlignment(.leading)
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
                     .fixedSize(
                         horizontal: false,
                         vertical: true
@@ -192,15 +166,8 @@ struct TaskCreationChoiceView: View {
             }
             .padding(.horizontal, 26)
             .padding(.vertical, 18)
-            .frame(minWidth: 280)
-            .background(
-                Capsule()
-                    .fill(Color.black.opacity(0.15))
-            )
-            .overlay {
-                Capsule()
-                    .stroke(teal, lineWidth: 1.5)
-            }
+            .frame(maxWidth: 320)
+            .supernovaGlassCapsule()
         }
         .buttonStyle(.plain)
     }

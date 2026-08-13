@@ -36,24 +36,12 @@ final class ArabicSpeechManager: ObservableObject {
     }
 }
 
-// MARK: - Navigation Capsule Button
+// MARK: - Shared Navigation Button
 struct SessionNavigationButton: View {
     let action: () -> Void
     
     var body: some View {
-        Button(action: action) {
-            Image(systemName: "chevron.right")
-                .font(.system(size: 18, weight: .bold))
-                .foregroundColor(.white)
-                .frame(width: 110, height: 42)
-                .background(Color.tealPrimary)
-                .clipShape(Capsule())
-                .overlay(
-                    Capsule()
-                        .stroke(Color.white.opacity(0.35), lineWidth: 1)
-                )
-                .shadow(color: Color.black.opacity(0.18), radius: 6, x: 0, y: 3)
-        }
+        BackCapsuleButton(action: action)
     }
 }
 
@@ -200,13 +188,10 @@ struct FocusTaskCard: View {
                     .foregroundColor(canAdvance ? .white : Color.white.opacity(0.85))
                     .frame(maxWidth: .infinity)
                     .frame(height: 60)
-                    .background(canAdvance ? Color.tealPrimary : Color.disabledButtonGray)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .shadow(
-                        color: canAdvance ? Color.tealPrimary.opacity(0.4) : Color.clear,
-                        radius: canAdvance ? 8 : 0,
-                        x: 0,
-                        y: canAdvance ? 3 : 0
+                    .supernovaGlassRounded(
+                        cornerRadius: 16,
+                        tint: canAdvance ? .tealPrimary : Color(hex: "#5A648D"),
+                        opacity: canAdvance ? 0.68 : 0.72
                     )
             }
             .disabled(!canAdvance)
@@ -274,9 +259,7 @@ struct FocusPauseButton: View {
             .foregroundColor(.white)
             .padding(.horizontal, 32)
             .padding(.vertical, 14)
-            .background(Color.tealPrimary)
-            .clipShape(Capsule())
-            .shadow(color: Color.tealPrimary.opacity(0.4), radius: 8, x: 0, y: 4)
+            .supernovaGlassCapsule()
         }
     }
 }
@@ -321,9 +304,7 @@ struct SkipBreakButton: View {
             .foregroundColor(.white)
             .padding(.horizontal, 32)
             .padding(.vertical, 14)
-            .background(Color.tealPrimary)
-            .clipShape(Capsule())
-            .shadow(color: Color.tealPrimary.opacity(0.4), radius: 8, x: 0, y: 4)
+            .supernovaGlassCapsule()
     }
 }
 
@@ -344,7 +325,7 @@ struct ParentPINCard: View {
     var body: some View {
         VStack(spacing: 20) {
             // Header Bar: Title and Upper-Right Teal Close Button
-            ZStack(alignment: .topTrailing) {
+            ZStack(alignment: .topLeading) {
                 // Title & Subtitle
                 VStack(spacing: 8) {
                     Text("رمز الوالدين")
@@ -614,13 +595,13 @@ struct TaskSessionView: View {
                 .padding(.bottom, max(screenHeight * 0.05, 30))
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 
-                // Upper-Right Navigation Capsule Button (Leave Session)
+                // Shared back control, kept on the physical left in every language.
                 SessionNavigationButton(action: {
                     speechManager.stop()
                     showLeaveConfirmation = true
                 })
-                .padding(.top, max(screenHeight * 0.04, 28))
-                .padding(.trailing, max(screenWidth * 0.04, 36))
+                .padding(.top, AppHeaderLayout.top)
+                .padding(.leading, AppHeaderLayout.horizontal)
                 
                 // Parent PIN Card Modal Overlay
                 if showPINCard {

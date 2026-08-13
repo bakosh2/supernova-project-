@@ -147,26 +147,12 @@ struct TaskDetailView: View {
     // MARK: - الشريط العلوي
     private var topBar: some View {
         HStack {
-            Button(action: { dismiss() }) {
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(.white)
-                    .frame(width: 60, height: 40)
-                    .background(accentButton)
-                    .clipShape(Capsule())
-            }
+            BackCapsuleButton { dismiss() }
             Spacer()
-            Button(action: {}) {
-                Text("؟")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundColor(.white)
-                    .frame(width: 45, height: 45)
-                    .background(accentButton)
-                    .clipShape(Circle())
-            }
         }
-        .padding(.horizontal, 40)
-        .padding(.top, 30)
+        .padding(.horizontal, AppHeaderLayout.horizontal)
+        .padding(.top, AppHeaderLayout.top)
+        .environment(\.layoutDirection, .leftToRight)
     }
 
     // MARK: - بطاقة معلومة صغيرة (صلاحية/استراحة/تركيز)

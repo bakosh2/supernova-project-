@@ -1,9 +1,68 @@
 import SwiftUI
+import UIKit
 
 // MARK: - هيكل بيانات الخطوة (Step Model)
 struct TaskStep: Identifiable {
     let id = UUID()
     var text: String
+}
+
+/// حقل UIKit يفرض الاتجاه العربي من اليمين؛ TextField في SwiftUI قد يعكس
+/// مكان النص الإرشادي عند استخدام اتجاه الواجهة العام.
+struct ArabicRightTextField: UIViewRepresentable {
+    @Binding var text: String
+    let placeholder: String
+    var onSubmit: (() -> Void)? = nil
+
+    func makeUIView(context: Context) -> UITextField {
+        let field = UITextField()
+        field.textColor = .white
+        field.font = UIFont.preferredFont(forTextStyle: .body)
+        field.textAlignment = .right
+        field.semanticContentAttribute = .forceRightToLeft
+        field.returnKeyType = .done
+        field.autocorrectionType = .no
+        field.delegate = context.coordinator
+        field.addTarget(context.coordinator, action: #selector(Coordinator.textDidChange(_:)), for: .editingChanged)
+
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.alignment = .right
+        paragraph.baseWritingDirection = .rightToLeft
+        field.attributedPlaceholder = NSAttributedString(
+            string: placeholder,
+            attributes: [
+                .foregroundColor: UIColor.systemGray,
+                .paragraphStyle: paragraph
+            ]
+        )
+        return field
+    }
+
+    func updateUIView(_ field: UITextField, context: Context) {
+        if field.text != text { field.text = text }
+        field.textAlignment = .right
+        field.semanticContentAttribute = .forceRightToLeft
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
+
+    final class Coordinator: NSObject, UITextFieldDelegate {
+        let parent: ArabicRightTextField
+
+        init(parent: ArabicRightTextField) {
+            self.parent = parent
+        }
+
+        @objc func textDidChange(_ field: UITextField) {
+            parent.text = field.text ?? ""
+        }
+
+        func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+            parent.onSubmit?()
+            textField.resignFirstResponder()
+            return true
+        }
+    }
 }
 
 // MARK: - Enums للخيارات المنسدلة
@@ -119,28 +178,12 @@ struct TaskCreationView: View {
             VStack {
                 HStack {
                     
-                    Button(action: { dismiss() }) {
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundColor(.white)
-                            .frame(width: 60, height: 40)
-                            .background(buttonTeal)
-                            .clipShape(Capsule())
-                    }
+                    BackCapsuleButton { dismiss() }
                     Spacer()
-                    Button(action: {}) {
-                        Text("؟")
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundColor(.white)
-                            .frame(width: 45, height: 45)
-                            .background(buttonTeal)
-                            .clipShape(Circle())
-                    }
-                    
-                    
                 }
-                .padding(.horizontal, 35)
-                .padding(.top, 25)
+                .padding(.horizontal, AppHeaderLayout.horizontal)
+                .padding(.top, AppHeaderLayout.top)
+                .environment(\.layoutDirection, .leftToRight)
                 
                 Spacer()
             }
@@ -149,21 +192,26 @@ struct TaskCreationView: View {
             VStack(spacing: 24) {
                     
                     // 1. عنوان المهمة
-                    VStack(alignment: .leading, spacing: 10) {
+                    VStack(alignment: .trailing, spacing: 10) {
                         Text("عنوان المهمة")
                             .font(.headline)
                             .foregroundColor(.white)
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                            .environment(\.layoutDirection, .leftToRight)
                         
-                        TextField("", text: $taskTitle, prompt: Text("مثال : واجب الرياضيات").foregroundColor(.gray))
-                            .multilineTextAlignment(.leading)
-                            .padding()
+                        ArabicRightTextField(
+                            text: $taskTitle,
+                            placeholder: "مثال: واجب الرياضيات"
+                        )
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 54)
+                            .padding(.horizontal, 18)
                             .background(Color.black.opacity(0.3))
                             .cornerRadius(25)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 25)
-                                    .stroke(neonBlue, lineWidth: 2)
+                                    .stroke(Color.tealPrimary, lineWidth: 2)
                             )
-                            .foregroundColor(.white)
                     }
                     
                     // 2. مدة التركيز والراحة
@@ -241,7 +289,7 @@ struct TaskCreationView: View {
                                         .cornerRadius(15)
                                         .overlay(
                                             RoundedRectangle(cornerRadius: 15)
-                                                .stroke(neonBlue.opacity(0.4), lineWidth: 1)
+                                                .stroke(Color.tealPrimary.opacity(0.65), lineWidth: 1.5)
                                         )
                                     }
                                 }
@@ -257,20 +305,20 @@ struct TaskCreationView: View {
                                     .font(.title2)
                             }
                             
-                            TextField("", text: $newStepText, prompt: Text("اكتب الخطوة هنا ثم اضغط إضافه...").foregroundColor(.gray))
-                                .multilineTextAlignment(.leading)
-                                .foregroundColor(.white)
-                                .font(.body)
-                                .onSubmit {
-                                    addNewStep()
-                                }
+                            ArabicRightTextField(
+                                text: $newStepText,
+                                placeholder: "اكتب الخطوة هنا ثم اضغط إضافة...",
+                                onSubmit: addNewStep
+                            )
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 28)
                         }
                         .padding()
                         .background(Color.black.opacity(0.3))
                         .cornerRadius(25)
                         .overlay(
                             RoundedRectangle(cornerRadius: 25)
-                                .stroke(neonBlue, lineWidth: 2)
+                                .stroke(Color.tealPrimary, lineWidth: 2)
                         )
                     }
                     
@@ -301,8 +349,7 @@ struct TaskCreationView: View {
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
-                            .background(buttonTeal)
-                            .cornerRadius(25)
+                            .supernovaGlassCapsule(tint: buttonTeal)
                     }
                     .padding(.horizontal, 30)
                     .padding(.top, 5)
@@ -320,6 +367,10 @@ struct TaskCreationView: View {
                     )
                 )
                 .cornerRadius(35)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 35)
+                        .stroke(Color.tealPrimary.opacity(0.65), lineWidth: 1.5)
+                )
                 .shadow(color: .black.opacity(0.4), radius: 20, x: 0, y: 10)
         }
         .environment(\.layoutDirection, .rightToLeft)
@@ -331,12 +382,11 @@ struct TaskCreationView: View {
             Image(systemName: "chevron.down")
                 .font(.caption)
                 .foregroundColor(.gray)
-            
-            Spacer()
-            
+
             Text(text)
                 .font(.subheadline)
                 .foregroundColor(.white)
+                .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 14)
@@ -345,8 +395,10 @@ struct TaskCreationView: View {
         .cornerRadius(20)
         .overlay(
             RoundedRectangle(cornerRadius: 20)
-                .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+                .stroke(Color.tealPrimary.opacity(0.78), lineWidth: 1.5)
         )
+        // Physical right alignment for Arabic text inside the field.
+        .environment(\.layoutDirection, .leftToRight)
     }
 }
 

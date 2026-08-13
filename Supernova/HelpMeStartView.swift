@@ -27,6 +27,74 @@ extension Color {
     static let disabledButtonGray = Color(hex: "#D1D1D4")
 }
 
+// MARK: - Shared glass surfaces
+// The same translucent material is used by the app's interactive controls so
+// buttons look consistent on every space-themed screen.
+extension View {
+    func supernovaGlassCapsule(tint: Color = .tealPrimary, opacity: Double = 0.68) -> some View {
+        self
+            // Keep the app's original button colour strong; the glass effect
+            // comes from the reflective overlay rather than washing it out.
+            .background(Capsule().fill(tint.opacity(max(opacity, 0.92))))
+            .clipShape(Capsule())
+            .overlay(Capsule().stroke(Color.white.opacity(0.38), lineWidth: 1))
+            // Bright upper reflection: this is the visible glass shine.
+            .overlay(
+                Capsule()
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.white.opacity(0.30), Color.white.opacity(0.08), .clear],
+                            startPoint: .top,
+                            endPoint: .center
+                        )
+                    )
+                    .padding(1)
+                    .allowsHitTesting(false)
+            )
+            .shadow(color: tint.opacity(0.28), radius: 9, x: 0, y: 4)
+    }
+
+    func supernovaGlassCircle(tint: Color = .tealPrimary, opacity: Double = 0.68) -> some View {
+        self
+            .background(Circle().fill(tint.opacity(max(opacity, 0.92))))
+            .clipShape(Circle())
+            .overlay(Circle().stroke(Color.white.opacity(0.38), lineWidth: 1))
+            .overlay(
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.white.opacity(0.30), Color.white.opacity(0.06), .clear],
+                            startPoint: .top,
+                            endPoint: .center
+                        )
+                    )
+                    .padding(1)
+                    .allowsHitTesting(false)
+            )
+            .shadow(color: tint.opacity(0.28), radius: 8, x: 0, y: 4)
+    }
+
+    func supernovaGlassRounded(cornerRadius: CGFloat, tint: Color = .tealPrimary, opacity: Double = 0.62) -> some View {
+        self
+            .background(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous).fill(tint.opacity(max(opacity, 0.92))))
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous).stroke(Color.white.opacity(0.36), lineWidth: 1))
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.white.opacity(0.28), Color.white.opacity(0.06), .clear],
+                            startPoint: .top,
+                            endPoint: .center
+                        )
+                    )
+                    .padding(1)
+                    .allowsHitTesting(false)
+            )
+            .shadow(color: tint.opacity(0.25), radius: 9, x: 0, y: 4)
+    }
+}
+
 // MARK: - ViewModel
 /// ViewModel managing the state for the "ساعدني أبدأ" (Help Me Start) checklist.
 @MainActor
@@ -65,24 +133,26 @@ final class HelpMeStartViewModel: ObservableObject {
 
 // MARK: - Components
 
-/// Back Capsule Button
+/// Shared circular back button used across the child experience.
 struct BackCapsuleButton: View {
     let action: () -> Void
     
     var body: some View {
         Button(action: action) {
-            Image(systemName: "chevron.right")
+            Image(systemName: "chevron.left")
                 .font(.system(size: 18, weight: .bold))
                 .foregroundColor(.white)
-                .frame(width: 110, height: 42)
-                .background(Color.tealPrimary)
-                .clipShape(Capsule())
-                .overlay(
-                    Capsule()
-                        .stroke(Color.white.opacity(0.35))
-                )
+                .frame(width: 48, height: 48)
+                .supernovaGlassCircle()
         }
     }
+}
+
+/// One set of header measurements keeps navigation controls level throughout
+/// the app, in either Arabic or English layout.
+enum AppHeaderLayout {
+    static let top: CGFloat = 30
+    static let horizontal: CGFloat = 40
 }
 
 /// Checklist Row Component
@@ -151,17 +221,10 @@ struct HelpMeStartButton: View {
                 .foregroundColor(isEnabled ? .white : Color.white.opacity(0.85))
                 .frame(maxWidth: 440)
                 .frame(height: 80)
-                .background(isEnabled ? Color.tealPrimary : Color.disabledButtonGray)
-                .clipShape(RoundedRectangle(cornerRadius: 16))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(isEnabled ? Color.white.opacity(0.4) : Color.clear, lineWidth: 1)
-                )
-                .shadow(
-                    color: isEnabled ? Color.tealPrimary.opacity(0.45) : Color.clear,
-                    radius: isEnabled ? 10 : 0,
-                    x: 0,
-                    y: isEnabled ? 4 : 0
+                .supernovaGlassRounded(
+                    cornerRadius: 16,
+                    tint: isEnabled ? .tealPrimary : Color(hex: "#5A648D"),
+                    opacity: isEnabled ? 0.68 : 0.68
                 )
         }
         .disabled(!isEnabled)
@@ -198,7 +261,7 @@ struct HelpMeStartView: View {
             let contentWidth = min(screenWidth * 0.48, 540)
             let astronautWidth = min(screenWidth * 0.24, 280)
             
-            ZStack(alignment: .topTrailing) {
+            ZStack(alignment: .topLeading) {
                 // Background space gradient with decorative stars
                 SpaceBackgroundView()
                 
@@ -253,12 +316,12 @@ struct HelpMeStartView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 
-                // Upper-Right Back Button (Teal Capsule)
+                // Shared back button, fixed on the physical left.
                 BackCapsuleButton(action: {
                     onBack()
                 })
-                .padding(.top, max(screenHeight * 0.04, 28))
-                .padding(.trailing, max(screenWidth * 0.04, 36))
+                .padding(.top, AppHeaderLayout.top)
+                .padding(.leading, AppHeaderLayout.horizontal)
                 
                 // Lower-Left Astronaut Illustration with Star
                 VStack {
