@@ -6,8 +6,19 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		3FF969903030D38F00C05F4B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3F3660CA30207D470061D1FE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3F3660D130207D470061D1FE;
+			remoteInfo = Supernova;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		3F3660D230207D470061D1FE /* Supernova.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Supernova.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3FF9698A3030D38F00C05F4B /* SupernovaUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SupernovaUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -20,6 +31,13 @@
 
 /* Begin PBXFrameworksBuildPhase section */
 		3F3660CF30207D470061D1FE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3FF969873030D38F00C05F4B /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -41,6 +59,7 @@
 			isa = PBXGroup;
 			children = (
 				3F3660D230207D470061D1FE /* Supernova.app */,
+				3FF9698A3030D38F00C05F4B /* SupernovaUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,6 +89,26 @@
 			productReference = 3F3660D230207D470061D1FE /* Supernova.app */;
 			productType = "com.apple.product-type.application";
 		};
+		3FF969893030D38F00C05F4B /* SupernovaUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3FF969923030D38F00C05F4B /* Build configuration list for PBXNativeTarget "SupernovaUITests" */;
+			buildPhases = (
+				3FF969863030D38F00C05F4B /* Sources */,
+				3FF969873030D38F00C05F4B /* Frameworks */,
+				3FF969883030D38F00C05F4B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				3FF969913030D38F00C05F4B /* PBXTargetDependency */,
+			);
+			name = SupernovaUITests;
+			packageProductDependencies = (
+			);
+			productName = SupernovaUITests;
+			productReference = 3FF9698A3030D38F00C05F4B /* SupernovaUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -82,6 +121,10 @@
 				TargetAttributes = {
 					3F3660D130207D470061D1FE = {
 						CreatedOnToolsVersion = 26.6;
+					};
+					3FF969893030D38F00C05F4B = {
+						CreatedOnToolsVersion = 26.6;
+						TestTargetID = 3F3660D130207D470061D1FE;
 					};
 				};
 			};
@@ -100,12 +143,20 @@
 			projectRoot = "";
 			targets = (
 				3F3660D130207D470061D1FE /* Supernova */,
+				3FF969893030D38F00C05F4B /* SupernovaUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		3F3660D030207D470061D1FE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3FF969883030D38F00C05F4B /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +173,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		3FF969863030D38F00C05F4B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		3FF969913030D38F00C05F4B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3F3660D130207D470061D1FE /* Supernova */;
+			targetProxy = 3FF969903030D38F00C05F4B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		3F3660DB30207D480061D1FE /* Debug */ = {
@@ -251,8 +317,10 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 6GS3U3BPQ4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Supernova;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -263,7 +331,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.raneem.Supernova;
+				PRODUCT_BUNDLE_IDENTIFIER = com.raneemshaalan.Supernova;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -282,8 +350,10 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 6GS3U3BPQ4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Supernova;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -294,7 +364,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.raneem.Supernova;
+				PRODUCT_BUNDLE_IDENTIFIER = com.raneemshaalan.Supernova;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -303,6 +373,46 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		3FF969933030D38F00C05F4B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.raneem.SupernovaUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Supernova;
+			};
+			name = Debug;
+		};
+		3FF969943030D38F00C05F4B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.raneem.SupernovaUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Supernova;
 			};
 			name = Release;
 		};
@@ -323,6 +433,15 @@
 			buildConfigurations = (
 				3F3660DE30207D480061D1FE /* Debug */,
 				3F3660DF30207D480061D1FE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3FF969923030D38F00C05F4B /* Build configuration list for PBXNativeTarget "SupernovaUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3FF969933030D38F00C05F4B /* Debug */,
+				3FF969943030D38F00C05F4B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

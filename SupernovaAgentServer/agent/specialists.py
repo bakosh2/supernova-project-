@@ -125,12 +125,14 @@ def _build(
     )
 
 
+SIRI_SECTION = "يجب عليك دائماً استدعاء أداة prepare_task لإعداد وإرجاع بيانات المهمة التقسيمية المحددة بدون كتابة نص حواري حر فقط."
+
+
 # ============================================================
 # SUPERNOVA SPECIALISTS
 # ============================================================
 
 SPECIALISTS: dict[str, Specialist] = {
-
     # --------------------------------------------------------
     # TASK
     # --------------------------------------------------------
@@ -202,6 +204,20 @@ SPECIALISTS: dict[str, Specialist] = {
         ],
         tool_names=[
             "add_task",
+        ],
+    ),
+
+    # --------------------------------------------------------
+    # SIRI HOMEWORK (Preview & Preparation only)
+    # --------------------------------------------------------
+    "siri_homework": _build(
+        name="siri_homework",
+        sections=[
+            TASK_SECTION,
+            SIRI_SECTION,
+        ],
+        tool_names=[
+            "prepare_task",
         ],
     ),
 }

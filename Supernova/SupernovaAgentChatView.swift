@@ -15,7 +15,7 @@ private struct SupernovaAgentEvent {
 /// The simulator reaches the server at 127.0.0.1. For a physical iPad, replace
 /// this host with the Mac's LAN address in one place below.
 private final class SupernovaAgentSocket: NSObject, URLSessionWebSocketDelegate {
-    private let endpoint = URL(string: "ws://127.0.0.1:8000/ws")!
+    private let endpoint = URL(string: "ws://172.20.10.3:8000/ws")!
     // نحتفظ بالجلسة طوال عمر المحادثة؛ لا تعتمد على جلسة مؤقتة قد تُغلق
     // بعد انقطاع التطبيق أو إعادة تشغيل الخادم.
     private lazy var session = URLSession(configuration: .default, delegate: self, delegateQueue: .main)
@@ -120,36 +120,70 @@ private final class SupernovaAgentChatModel: ObservableObject {
     }
 
     private func handle(_ event: SupernovaAgentEvent) {
-        switch event.type {
-        case "session":
-            status = "متصل بـ Supernova"
-        case "status":
-            status = event.message ?? "Supernova يفكر..."
-        case "token":
-            status = ""
-            if let last = messages.last, last.sender == .agent, isWaiting {
-                messages[messages.count - 1].text += event.text ?? ""
-            } else {
-                messages.append(SupernovaChatMessage(text: event.text ?? "", sender: .agent))
-            }
-        case "task_added":
-            if let task = event.task, let item = taskItem(from: task) {
-                onTaskAdded?(item)
-                messages.append(SupernovaChatMessage(text: "تمت إضافة المهمة إلى قائمة مهام طفلك بنجاح ⭐", sender: .agent))
-            }
-        case "error":
-            messages.append(SupernovaChatMessage(text: event.message ?? "تعذر الاتصال بـ Supernova. تأكد من تشغيل الخادم ثم حاول مرة أخرى.", sender: .agent))
-            isWaiting = false
-        case "done":
-            isWaiting = false
-            status = "متصل بـ Supernova"
-        case "disconnected":
-            isWaiting = false
-            status = "انقطع الاتصال بـ Supernova"
-        default:
-            break
+    print("🔵 [WS EVENT TYPE]", event.type)
+
+    switch event.type {
+    case "session":
+        status = "متصل بـ Supernova"
+
+    case "status":
+        status = event.message ?? "Supernova يفكر..."
+
+    case "token":
+        status = ""
+        if let last = messages.last, last.sender == .agent, isWaiting {
+            messages[messages.count - 1].text += event.text ?? ""
+        } else {
+            messages.append(
+                SupernovaChatMessage(
+                    text: event.text ?? "",
+                    sender: .agent
+                )
+            )
         }
+
+    case "task_added":
+        if let dict = event.task {
+            print("🟢 [CHAT] task_added received:", dict)
+
+            if let item = taskItem(from: dict) {
+                print("🟢 [CHAT] calling onTaskAdded")
+
+                onTaskAdded?(item)
+
+                messages.append(
+                    SupernovaChatMessage(
+                        text: "تمت إضافة المهمة إلى قائمة مهام طفلك بنجاح ⭐",
+                        sender: .agent
+                    )
+                )
+            }
+        }
+
+    case "error":
+    print("🔴 [CHAT ERROR]", event.message ?? "No error message")
+
+    messages.append(
+        SupernovaChatMessage(
+            text: event.message ?? "تعذر الاتصال بـ Supernova. تأكد من تشغيل الخادم ثم حاول مرة أخرى.",
+            sender: .agent
+        )
+    )
+
+    isWaiting = false
+    
+    case "done":
+        isWaiting = false
+        status = "متصل بـ Supernova"
+
+    case "disconnected":
+        isWaiting = false
+        status = "انقطع الاتصال بـ Supernova"
+
+    default:
+        break
     }
+}
 
     private func taskItem(from task: [String: Any]) -> TaskItem? {
         guard let title = task["title"] as? String, !title.isEmpty else { return nil }

@@ -354,6 +354,8 @@ struct ContentView: View {
 
 // MARK: - 6. الشاشة الثالثة: أدخل رمز PIN (ParentPinFlowView)
 struct ParentPinFlowView: View {
+    var onSuccess: (() -> Void)? = nil
+
     @AppStorage("savedParentPin") private var savedPin: String = ""
     @AppStorage("hasCompletedChildSetup") private var hasCompletedChildSetup = false
     
@@ -527,11 +529,22 @@ struct ParentPinFlowView: View {
         case .create:
             tempFirstPin = enteredPin; enteredPin = ""; step = .confirm
         case .confirm:
-            if enteredPin == tempFirstPin { savedPin = enteredPin; navigateToChildProfile = true }
-            else { errorMessage = "الرمز غير مطابق، حاول مرة أخرى"; enteredPin = "" }
+            if enteredPin == tempFirstPin {
+                savedPin = enteredPin
+                if let onSuccess {
+                    onSuccess()
+                } else {
+                    navigateToChildProfile = true
+                }
+            } else { errorMessage = "الرمز غير مطابق، حاول مرة أخرى"; enteredPin = "" }
         case .enter:
-            if enteredPin == savedPin { navigateToChildProfile = true }
-            else { errorMessage = "الرمز خاطئ، يرجى المحاولة مجدداً"; enteredPin = "" }
+            if enteredPin == savedPin {
+                if let onSuccess {
+                    onSuccess()
+                } else {
+                    navigateToChildProfile = true
+                }
+            } else { errorMessage = "الرمز خاطئ، يرجى المحاولة مجدداً"; enteredPin = "" }
         }
     }
 }

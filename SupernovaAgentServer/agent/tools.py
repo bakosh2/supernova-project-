@@ -77,6 +77,73 @@ TOOLS: list[dict] = [
             ],
         },
     },
+    {
+        "name": "prepare_task",
+        "description": (
+            "Prepare a homework task preview without adding it to the database. "
+            "Returns a structured task breakdown."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "description": "Task title.",
+                },
+                "child_age": {
+                    "type": "integer",
+                    "description": "Child age (6 through 12).",
+                },
+                "scope": {
+                    "type": "string",
+                    "description": "The exact part of the main task covered by the subtasks.",
+                },
+                "focus_duration": {
+                    "type": "integer",
+                    "description": "Focus duration in minutes.",
+                },
+                "break_duration": {
+                    "type": "integer",
+                    "description": "Break duration in minutes.",
+                },
+                "validity_days": {
+                    "type": "integer",
+                    "description": "Number of days the task remains valid.",
+                },
+                "subtasks": {
+                    "type": "array",
+                    "description": "List of subtasks with titles and durations.",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "title": {
+                                "type": "string",
+                                "description": "Subtask title.",
+                            },
+                            "duration": {
+                                "type": "integer",
+                                "description": "Subtask duration in minutes.",
+                            },
+                        },
+                        "required": ["title", "duration"],
+                    },
+                },
+                "requires_code": {
+                    "type": "boolean",
+                    "description": "True if completion requires a PIN.",
+                },
+            },
+            "required": [
+                "title",
+                "scope",
+                "focus_duration",
+                "break_duration",
+                "validity_days",
+                "subtasks",
+                "requires_code",
+            ],
+        },
+    },
 ]
 
 
@@ -221,12 +288,37 @@ def handle_add_task(
     }, None
 
 
+def handle_prepare_task(
+    tool_input: dict[str, Any],
+    ctx: dict[str, Any],
+) -> tuple[dict[str, Any], list[dict] | None]:
+    task = {
+        "id": str(uuid4()),
+        "title": tool_input["title"],
+        "child_age": tool_input.get("child_age"),
+        "scope": tool_input["scope"],
+        "focus_duration": tool_input["focus_duration"],
+        "break_duration": tool_input["break_duration"],
+        "validity_days": tool_input["validity_days"],
+        "subtasks": tool_input["subtasks"],
+        "requires_code": tool_input["requires_code"],
+    }
+
+    return {
+        "success": True,
+        "event": "task_preview",
+        "message": "Task prepared.",
+        "task": task,
+    }, None
+
+
 # ============================================================
 # HANDLERS REGISTRY
 # ============================================================
 
 HANDLERS = {
     "add_task": handle_add_task,
+    "prepare_task": handle_prepare_task,
 }
 
 

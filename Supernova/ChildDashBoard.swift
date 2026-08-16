@@ -344,6 +344,7 @@ struct TodaysMissionsView: View {
             Spacer()
             starBalanceCapsule
         }
+        .environment(\.layoutDirection, .leftToRight)
         .padding(.horizontal, AppHeaderLayout.horizontal)
         .padding(.top, AppHeaderLayout.top)
     }

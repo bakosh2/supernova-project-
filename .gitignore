@@ -7,5 +7,11 @@ DerivedData/
 *.moved-aside
 *.xcuserstate
 
+# Virtualenv and cache
+.venv/
+venv/
+__pycache__/
+*.pyc
+
 # Exclude spec files
 *specs*

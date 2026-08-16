@@ -118,3 +118,94 @@ async def ws_chat(ws: WebSocket) -> None:
             )
     except WebSocketDisconnect:
         pass
+
+
+# ============================================================
+# SIMPLE SIRI HOMEWORK ENDPOINT
+# ============================================================
+
+from typing import Optional
+from pydantic import BaseModel
+from fastapi import HTTPException
+from agent.agent import run_specialist
+from agent.specialists import SPECIALISTS
+
+
+class SiriHomeworkRequest(BaseModel):
+    description: Optional[str] = None
+    current_task: Optional[dict] = None
+    change: Optional[str] = None
+
+
+@app.post("/siri-homework")
+async def siri_homework_endpoint(req: SiriHomeworkRequest):
+    desc = (req.description or "").strip()
+    change = (req.change or "").strip()
+    current_task = req.current_task
+
+    if not desc and not change:
+        raise HTTPException(status_code=400, detail="Description or change request required")
+
+    specialist = SPECIALISTS["siri_homework"]
+    captured_task = None
+
+    async def emit(event: dict) -> None:
+        nonlocal captured_task
+        if event.get("task") and (event.get("type") == "task_preview" or event.get("event") == "task_preview"):
+            captured_task = event["task"]
+
+    if current_task and change:
+        prompt_text = f"الواجب الأصلي: {desc}\nالنسخة الحالية من المهمة: {json.dumps(current_task, ensure_ascii=False)}\nالتعديل المطلوب من الوالد: {change}"
+    else:
+        prompt_text = f"أضف واجب: {desc}"
+
+    session_id = f"siri-{uuid.uuid4().hex}"
+    history = [{"role": "user", "content": prompt_text}]
+    trace = {}
+
+    await run_specialist(
+        specialist=specialist,
+        session_id=session_id,
+        history=history,
+        llm=app.state.llm,
+        audit=app.state.audit,
+        emit=emit,
+        trace=trace,
+        llm_semaphore=app.state.llm_semaphore,
+        tool_choice={"type": "tool", "name": "prepare_task"},
+    )
+
+    if not captured_task:
+        if not app.state.settings.ameen_mock:
+            log.error("Real Anthropic run failed to produce prepare_task tool call")
+            raise HTTPException(status_code=500, detail="Failed to prepare task from Anthropic")
+
+        # Mock/Offline test fallback ONLY
+        captured_task = {
+            "title": desc or "واجب مدرسة",
+            "focus_duration": 20,
+            "break_duration": 5,
+            "validity_days": 1,
+            "requires_code": False,
+            "subtasks": [
+                {"title": "حل الجزء الأول من الواجب", "duration": 7},
+                {"title": "حل الجزء الثاني من الواجب", "duration": 7},
+                {"title": "إكمال باقي الواجب ومراجعته", "duration": 6}
+            ]
+        }
+
+    return {
+        "title": captured_task.get("title", desc or "واجب مدرسة"),
+        "focus_duration": captured_task.get("focus_duration", 20),
+        "break_duration": captured_task.get("break_duration", 5),
+        "validity_days": captured_task.get("validity_days", 1),
+        "requires_code": captured_task.get("requires_code", False),
+        "subtasks": [
+            {
+                "title": sub.get("title", ""),
+                "duration": sub.get("duration", 5)
+            }
+            for sub in captured_task.get("subtasks", [])
+        ]
+    }
+

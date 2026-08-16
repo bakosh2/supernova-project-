@@ -14,15 +14,17 @@ import Combine
 final class ArabicSpeechManager: ObservableObject {
     private let synthesizer = AVSpeechSynthesizer()
     
-    /// Reads text aloud in Arabic, stopping any current speech first.
+    /// Reads text aloud in Arabic, applying phonetic harakat for crisp TTS pronunciation
+    /// without modifying the displayed UI text.
     func speak(_ text: String) {
         stop()
         let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedText.isEmpty else { return }
         
-        let utterance = AVSpeechUtterance(string: trimmedText)
+        let vocalizedText = vocalizedForSpeech(trimmedText)
+        let utterance = AVSpeechUtterance(string: vocalizedText)
         utterance.voice = AVSpeechSynthesisVoice(language: "ar-SA")
-        utterance.rate = 0.56
+        utterance.rate = 0.45
         
         utterance.pitchMultiplier = 1.05
         synthesizer.speak(utterance)
@@ -33,6 +35,49 @@ final class ArabicSpeechManager: ObservableObject {
         if synthesizer.isSpeaking {
             synthesizer.stopSpeaking(at: .immediate)
         }
+    }
+
+    /// Enhances Arabic speech pronunciation for TTS without affecting displayed UI text.
+    private func vocalizedForSpeech(_ text: String) -> String {
+        var result = text
+
+        let phoneticMappings: [(target: String, vocalized: String)] = [
+            ("حلك", "حَلِّكْ"),
+            ("واجب", "وَاجِبْ"),
+            ("اجابتك", "إِجَابَتِكْ"),
+            ("إجابتك", "إِجَابَتِكْ"),
+            ("اجاباتك", "إِجَابَاتِكْ"),
+            ("إجاباتك", "إِجَابَاتِكْ"),
+            ("المسائل", "الْمَسَائِلْ"),
+            ("التمارين", "التَّمَارِينْ"),
+            ("تمارين", "تَمَارِينْ"),
+            ("أسئلة", "أَسْئِلَةْ"),
+            ("اسئلة", "أَسْئِلَةْ"),
+            ("السؤال", "السُّؤَالْ"),
+            ("سؤال", "سُؤَالْ"),
+            ("حل", "حَلّ"),
+            ("راجع", "رَاجِعْ"),
+            ("مراجعة", "مُرَاجَعَةْ"),
+            ("تأكد", "تَأَكَّدْ"),
+            ("تاكد", "تَأَكَّدْ"),
+            ("اختبار", "اخْتِبَارْ"),
+            ("درس", "دَرْسْ"),
+            ("صفحة", "صَفْحَةْ"),
+            ("صفحات", "صَفَحَاتْ"),
+            ("قراءة", "قِرَاءَةْ"),
+            ("كتابة", "كِتَابَةْ"),
+            ("حفظ", "حِفْظْ"),
+            ("فصل", "فَصْلْ"),
+            ("مهمة", "مهمَّة"),
+            ("المهمة", "المهمَّة"),
+            ("تطبيق", "تَطْبِيقْ")
+        ]
+
+        for mapping in phoneticMappings {
+            result = result.replacingOccurrences(of: mapping.target, with: mapping.vocalized)
+        }
+
+        return result
     }
 }
 
@@ -595,13 +640,17 @@ struct TaskSessionView: View {
                 .padding(.bottom, max(screenHeight * 0.05, 30))
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 
-                // Shared back control, kept on the physical left in every language.
-                SessionNavigationButton(action: {
-                    speechManager.stop()
-                    showLeaveConfirmation = true
-                })
+                // Shared back control, aligned identically to parent dashboard and child dashboard
+                HStack {
+                    SessionNavigationButton(action: {
+                        speechManager.stop()
+                        showLeaveConfirmation = true
+                    })
+                    Spacer()
+                }
+                .environment(\.layoutDirection, .leftToRight)
+                .padding(.horizontal, AppHeaderLayout.horizontal)
                 .padding(.top, AppHeaderLayout.top)
-                .padding(.leading, AppHeaderLayout.horizontal)
                 
                 // Parent PIN Card Modal Overlay
                 if showPINCard {

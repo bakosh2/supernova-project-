@@ -16,10 +16,18 @@ class AnthropicLLM:
         self._client = AsyncAnthropic(api_key=api_key)
         self._model = model
 
-    async def complete(self, system, tools, messages, on_text) -> dict:
-        async with self._client.messages.stream(
-            model=self._model, max_tokens=1500, system=system, tools=tools, messages=messages,
-        ) as stream:
+    async def complete(self, system, tools, messages, on_text, tool_choice: dict | None = None) -> dict:
+        kwargs = {
+            "model": self._model,
+            "max_tokens": 1500,
+            "system": system,
+            "tools": tools,
+            "messages": messages,
+        }
+        if tool_choice:
+            kwargs["tool_choice"] = tool_choice
+
+        async with self._client.messages.stream(**kwargs) as stream:
             async for text in stream.text_stream:
                 await on_text(text)
             final = await stream.get_final_message()
@@ -41,7 +49,7 @@ class OpenRouterLLM:
         self._client = httpx.AsyncClient(timeout=90, headers={"Authorization": f"Bearer {api_key}"})
         self._model = model
 
-    async def complete(self, system, tools, messages, on_text) -> dict:
+    async def complete(self, system, tools, messages, on_text, tool_choice: dict | None = None) -> dict:
         system_text = "\n\n".join(b["text"] for b in system if b.get("type") == "text")
         converted = [{"role": "system", "content": system_text}]
         for message in messages:
@@ -56,15 +64,23 @@ class OpenRouterLLM:
         payload = {"model": self._model, "max_tokens": 1500, "messages": converted}
         if tools:
             payload["tools"] = [{"type": "function", "function": {"name": tool["name"], "description": tool.get("description", ""), "parameters": tool["input_schema"]}} for tool in tools]
+        if tool_choice:
+            payload["tool_choice"] = tool_choice
         response = await self._client.post(self.URL, json=payload)
         response.raise_for_status()
-        message = response.json()["choices"][0]["message"]
+        data = response.json()
+        choice = data["choices"][0]
+        msg = choice["message"]
         content = []
-        if text := message.get("content"):
-            await on_text(text)
-            content.append({"type": "text", "text": text})
-        content.extend({"type": "tool_use", "id": call["id"], "name": call["function"]["name"], "input": json.loads(call["function"]["arguments"])} for call in message.get("tool_calls", []))
-        return {"role": "assistant", "content": content, "stop_reason": "tool_use" if message.get("tool_calls") else "end_turn"}
+        if msg.get("content"):
+            content.append({"type": "text", "text": msg["content"]})
+        for call in msg.get("tool_calls", []):
+            fn = call["function"]
+            content.append({"type": "tool_use", "id": call["id"], "name": fn["name"], "input": json.loads(fn["arguments"])})
+        res_text = " ".join(b.get("text", "") for b in content if b.get("type") == "text")
+        if res_text:
+            await on_text(res_text)
+        return {"role": "assistant", "content": content, "stop_reason": choice.get("finish_reason")}
 
 
 def _tool_use(task: dict) -> dict:

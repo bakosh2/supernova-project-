@@ -1,0 +1,789 @@
+I want to simplify the Siri homework feature substantially.
+
+This is a STUDENT PROJECT, not a production/enterprise app.
+
+The implementation must be:
+
+* simple
+* easy to understand
+* easy to explain by a student
+* small in scope
+* not over-engineered
+* not split across many unnecessary files
+* not built with enterprise-level infrastructure unless absolutely required
+
+Please prioritize clarity over robustness.
+
+I want code that I can comfortably explain line by line.
+
+
+# NEW SIMPLIFIED GOAL
+
+I still want the same visible feature:
+
+Parent speaks Arabic to Siri.
+
+Example:
+
+"أضف واجب في Supernova"
+
+Siri asks:
+
+"ما هو الواجب؟"
+
+Parent:
+
+"واجب رياضيات فيه عشر أسئلة"
+
+Siri sends that description to my existing FastAPI/Anthropic backend.
+
+Anthropic generates the homework breakdown.
+
+For example:
+
+Title:
+"واجب الرياضيات"
+
+Steps:
+
+1. حل الأسئلة ١–٢
+2. حل الأسئلة ٣–٤
+3. حل الأسئلة ٥–٦
+4. حل الأسئلة ٧–٨
+5. حل الأسئلة ٩–١٠
+
+Siri tells the parent the result.
+
+Then Siri offers:
+
+* إضافة
+* تغيير
+* إلغاء
+
+If the parent chooses تغيير:
+
+* Siri asks what they want changed.
+* The same simple backend endpoint sends the current task + requested change to Anthropic.
+* Anthropic returns a revised task.
+* Siri presents the revised result again.
+
+If the parent chooses إلغاء:
+
+* stop
+* nothing is saved
+* app does not need to open
+
+If the parent chooses إضافة:
+
+* store the already-approved generated task LOCALLY on the iPad
+* bring the app to the foreground
+* reuse the EXISTING parent PIN flow
+* after correct PIN, convert the pending task into the app's normal task model
+* save it using the EXISTING SwiftData task save logic
+* clear the pending task
+
+There must be NO second Anthropic request after the parent says إضافة.
+
+---
+
+# KEEP THIS VERY SIMPLE
+
+Do NOT implement the previous enterprise-style design.
+
+DO NOT add:
+
+* Redis Siri draft storage
+* backend draft state machine
+* `draft`
+* `awaiting_pin`
+* `finalized`
+* `draft_locked`
+* server-side Siri draft IDs
+* `siriDraftID` property on HomeworkTask
+* idempotency infrastructure
+* crash-recovery protocol
+* multiple draft lifecycle endpoints
+* `/await_pin`
+* `/finalize`
+* `/cancel` endpoint unless genuinely needed
+* complex transactional state transitions
+* extra ObservableObject stores unless necessary
+* separate Siri database
+* separate Siri task persistence system
+* new authentication system
+* duplicate parent PIN code
+* unnecessary service abstractions
+* unnecessary protocols/repositories/managers
+* a large number of new files
+
+This is explicitly NOT intended to be production-grade architecture.
+
+If there is a simpler student-level solution, USE IT.
+
+---
+
+# SIMPLE BACKEND DESIGN
+
+Prefer ONE new endpoint.
+
+For example:
+
+POST `/siri-homework`
+
+It should support BOTH initial generation and revision.
+
+A simple request model could conceptually be:
+
+```json
+{
+  "description": "واجب رياضيات فيه عشر أسئلة",
+  "current_task": null,
+  "change": null
+}
+```
+
+For an initial request:
+
+* `description` is provided
+* `current_task` is null
+* `change` is null
+
+Anthropic generates the task.
+
+For a revision:
+
+```json
+{
+  "description": "واجب رياضيات فيه عشر أسئلة",
+  "current_task": {
+    "...": "current generated task"
+  },
+  "change": "خليه ثلاث خطوات"
+}
+```
+
+Anthropic revises the current task.
+
+Return ONE straightforward JSON task response.
+
+Example:
+
+```json
+{
+  "title": "واجب الرياضيات",
+  "focus_duration": 20,
+  "break_duration": 5,
+  "validity_days": 1,
+  "requires_code": false,
+  "subtasks": [
+    {
+      "title": "حل الأسئلة ١–٢",
+      "duration": 4
+    }
+  ]
+}
+```
+
+Reuse the EXISTING Anthropic client and existing prompts/tools wherever possible.
+
+Do not build another Anthropic integration.
+
+Do not persist the Siri draft on the server.
+
+The server simply receives request → asks Anthropic → returns structured task.
+
+---
+
+# KEEP THE EXISTING SUPERNOVA CHAT UNCHANGED
+
+The current in-app Supernova chat already uses:
+
+`/ws`
+
+Leave it alone as much as possible.
+
+Do not redesign it.
+
+Do not convert it to the new endpoint.
+
+The architecture should simply be:
+
+Existing chat:
+SwiftUI chat
+→ `/ws`
+→ existing Supernova agent
+→ Anthropic
+
+New Siri:
+App Intent
+→ `/siri-homework`
+→ existing Anthropic infrastructure
+
+The new Siri feature should not interfere with the old chat.
+
+---
+
+# SIMPLE SWIFT DESIGN
+
+Try to keep the new Swift code to around 2–3 files if practical.
+
+Preferred:
+
+1. `AddHomeworkIntent.swift`
+2. `SiriHomeworkService.swift`
+3. `HomeworkAppShortcuts.swift`
+
+If a tiny helper for local pending homework is necessary, keep it inside one of those files or create one very small helper only if it genuinely improves readability.
+
+Do NOT create a large architecture of:
+
+* manager
+* repository
+* coordinator
+* router
+* store
+* service protocol
+* state machine
+* lifecycle controller
+
+unless the existing project already uses that pattern.
+
+---
+
+# GENERATED HOMEWORK SWIFT MODEL
+
+Create a simple Codable structure that mirrors the backend response.
+
+Conceptually:
+
+```swift
+struct GeneratedHomework: Codable {
+    let title: String
+    let focusDuration: Int
+    let breakDuration: Int
+    let validityDays: Int
+    let requiresCode: Bool
+    let subtasks: [GeneratedSubtask]
+}
+
+struct GeneratedSubtask: Codable {
+    let title: String
+    let duration: Int
+}
+```
+
+Use CodingKeys only if required by snake_case JSON.
+
+Keep it simple.
+
+---
+
+# SIRI APP INTENT
+
+Use Apple's current App Intents framework.
+
+Use standard:
+
+```swift
+struct AddHomeworkIntent: AppIntent
+```
+
+Do not use old SiriKit.
+
+Do not use `CustomIntentMigratedAppIntent`.
+
+Before writing the code:
+
+* inspect the project's deployment target
+* inspect the installed SDK
+* use the simplest current App Intents APIs that actually compile
+
+Do not invent API signatures.
+
+---
+
+# HOMEWORK DESCRIPTION
+
+The intent should accept one free-form Arabic description.
+
+Conceptually:
+
+```swift
+@Parameter(title: "وصف الواجب")
+var homeworkDescription: String?
+```
+
+If missing, Siri should ask:
+
+"ما هو الواجب؟"
+
+Use the current App Intents parameter request API supported by the installed SDK.
+
+No custom speech recognizer.
+
+---
+
+# SIRI REVIEW LOOP
+
+After generation, Siri should present the generated task.
+
+For short homework:
+
+* say title
+* say step count
+* say the individual steps
+
+Then ask:
+
+"هل تريد إضافته، تغييره، أم إلغاءه؟"
+
+Use the simplest current App Intents choice mechanism that compiles.
+
+The logical choices are:
+
+* إضافة
+* تغيير
+* إلغاء
+
+Do not over-engineer this interaction.
+
+---
+
+# CHANGE FLOW
+
+If parent chooses:
+
+"تغيير"
+
+Ask:
+
+"ماذا تريد أن تغيّر؟"
+
+Parent might say:
+
+"خليه ثلاث خطوات"
+
+Call the SAME `/siri-homework` endpoint with:
+
+* original description
+* current generated task
+* change request
+
+Anthropic returns revised task.
+
+Replace the local Swift variable with the revised task.
+
+Present it again.
+
+Allow a small number of revisions, such as 2 or 3, if needed to keep the App Intent logic simple.
+
+Do not build persistent backend revision sessions.
+
+---
+
+# CANCEL FLOW
+
+If parent chooses:
+
+"إلغاء"
+
+Simply finish.
+
+Siri can say:
+
+"تم الإلغاء ولم تتم إضافة المهمة."
+
+No server cleanup is necessary because the server does not store drafts.
+
+Do not open the app.
+
+---
+
+# ADD FLOW
+
+If parent chooses:
+
+"إضافة"
+
+DO NOT save the task immediately.
+
+DO NOT call Anthropic again.
+
+Take the EXACT `GeneratedHomework` object Siri just showed the parent.
+
+Encode it locally using JSONEncoder and save it in UserDefaults.
+
+For example conceptually:
+
+```swift
+let data = try JSONEncoder().encode(homework)
+UserDefaults.standard.set(data, forKey: "pendingSiriHomework")
+```
+
+A very small helper is acceptable:
+
+```swift
+enum PendingSiriHomework {
+    static let key = "pendingSiriHomework"
+
+    static func save(_ homework: GeneratedHomework) throws { ... }
+    static func load() -> GeneratedHomework? { ... }
+    static func clear() { ... }
+}
+```
+
+This is intentionally simple.
+
+Do NOT add a Redis draft.
+
+Do NOT add a server draft ID.
+
+Do NOT add a SwiftData Siri ID.
+
+---
+
+# FOREGROUND THE APP
+
+After storing the approved homework locally:
+
+Bring the app to the foreground using the current App Intents foreground continuation API available in the installed SDK.
+
+Do not use a deprecated API if the SDK has a current replacement.
+
+Use the simplest implementation that compiles.
+
+Siri should say something like:
+
+"افتح التطبيق وأدخل رمز ولي الأمر لإضافة الواجب."
+
+---
+
+# EXISTING PARENT PIN
+
+This is important.
+
+DO NOT create a new Siri-specific PIN screen if the existing parent PIN screen can be reused.
+
+Inspect the project and reuse the current parent authentication flow.
+
+The desired behavior:
+
+App opens
+→ pendingSiriHomework exists
+→ existing parent PIN is presented
+→ parent enters PIN
+
+Wrong PIN:
+
+* nothing is saved
+
+Correct PIN:
+
+* load pending homework from UserDefaults
+* convert it to the SAME existing HomeworkTask / TaskItem model
+* use the SAME existing task-saving code
+* clear pendingSiriHomework
+
+The PIN must stay local.
+
+Never send the PIN to:
+
+* Siri
+* FastAPI
+* Anthropic
+
+Do not hardcode a fallback PIN.
+
+---
+
+# TASK SAVING
+
+Reuse existing task creation.
+
+Do not create a Siri-specific SwiftData save implementation if the current app already has a helper/factory.
+
+Find the same path used by:
+
+* manual task creation
+* existing AI task creation
+
+Map:
+
+GeneratedHomework
+→ existing HomeworkTask / TaskItem
+
+Then save normally.
+
+After successful save:
+
+```swift
+PendingSiriHomework.clear()
+```
+
+Display a simple success message:
+
+"تمت إضافة المهمة بنجاح ✨"
+
+That is enough.
+
+---
+
+# APP START / FOREGROUND CHECK
+
+Keep this simple too.
+
+The app needs to notice if:
+
+```text
+pendingSiriHomework exists
+```
+
+when it becomes active.
+
+Use the simplest existing root-view approach.
+
+For example:
+
+* on root `.onAppear`
+* or when `scenePhase == .active`
+
+Do not create a large lifecycle manager.
+
+If pending homework exists:
+→ route to existing parent PIN flow.
+
+---
+
+# IMPORTANT PERFORMANCE RULE
+
+The previous Siri implementation made the app laggy.
+
+The new implementation must be PASSIVE when Siri is not being used.
+
+While the user is normally using the app:
+
+* no Siri HTTP requests should run
+* no polling
+* no timers
+* no repeated UserDefaults writes
+* no repeated draft checks inside `body`
+* no WebSocket reconnect loops caused by Siri code
+* no synchronous network operations
+* no main-thread blocking
+
+`SiriHomeworkService` should do NOTHING until `AddHomeworkIntent` explicitly calls it.
+
+The pending UserDefaults helper should only read/write when needed.
+
+Do not put network calls inside:
+
+* SwiftUI `body`
+* computed properties
+* initializers
+* repeated `.onAppear` handlers
+
+unless genuinely required.
+
+---
+
+# SIMPLICITY STANDARD
+
+For every new abstraction, ask:
+
+"Can this be done clearly with a small function instead?"
+
+If yes, use the function.
+
+Prefer:
+
+```swift
+func generateHomework(...)
+func reviseHomework(...)
+func savePendingHomework(...)
+func loadPendingHomework(...)
+```
+
+over multiple manager/repository/protocol layers.
+
+Prefer clear if/switch logic over advanced patterns.
+
+Prefer a few understandable files over many tiny architectural files.
+
+The code should look like something a competent student could write and explain.
+
+Add comments only where they help explain the flow.
+
+Do not make the implementation look intentionally sophisticated.
+
+---
+
+# IMPLEMENT IN ONLY 4 SIMPLE STAGES
+
+Do not implement everything at once.
+
+## STAGE 1 — REVERT
+
+Revert all current Siri Stage 1–3 work back to the known-good pre-Siri version.
+
+Verify:
+
+* performance normal
+* app builds
+* Supernova chat works
+
+STOP and report.
+
+## STAGE 2 — SIMPLE BACKEND
+
+Add only:
+
+`POST /siri-homework`
+
+Use existing Anthropic infrastructure.
+
+Support:
+
+* initial generation
+* revision
+
+No persistence.
+
+No Redis.
+
+Test directly.
+
+STOP and report.
+
+## STAGE 3 — SIMPLE SIRI INTENT
+
+Add:
+
+* SiriHomeworkService
+* AddHomeworkIntent
+* HomeworkAppShortcuts
+
+Implement:
+
+* Arabic description
+* generate
+* present
+* Change
+* Cancel
+* Add
+
+On Add:
+
+* save exact generated task to UserDefaults
+* foreground app
+
+Do NOT connect parent PIN/save yet.
+
+Verify app remains fast.
+
+STOP and report.
+
+## STAGE 4 — EXISTING PIN + SAVE
+
+When app opens with pending Siri homework:
+
+Reuse existing parent PIN.
+
+Correct PIN:
+→ normal task creation
+→ normal SwiftData save
+→ clear UserDefaults
+
+Wrong PIN:
+→ no task save
+
+Test complete Arabic flow.
+
+STOP and report.
+
+---
+
+# BEFORE EACH STAGE
+
+Before changing code:
+
+1. inspect the relevant existing files
+2. explain the minimal changes needed
+3. avoid unrelated refactoring
+4. make the smallest possible change
+5. compile/test
+6. stop
+
+Do not move to the next stage automatically.
+
+---
+
+# FINAL EXPERIENCE
+
+The complete student-level implementation should be:
+
+```text
+Parent:
+"أضف واجب في Supernova"
+
+        ↓
+
+Siri:
+"ما هو الواجب؟"
+
+        ↓
+
+Parent:
+"واجب رياضيات فيه عشر أسئلة"
+
+        ↓
+
+ONE FastAPI endpoint
+
+        ↓
+
+Anthropic
+
+        ↓
+
+GeneratedHomework
+
+        ↓
+
+Siri presents breakdown
+
+        ↓
+
+إضافة / تغيير / إلغاء
+
+تغيير
+→ same endpoint
+→ Anthropic revises
+→ Siri presents again
+
+إلغاء
+→ stop
+
+إضافة
+→ encode GeneratedHomework to UserDefaults
+→ open app
+→ EXISTING Parent PIN
+→ correct PIN
+→ EXISTING normal task creation/save
+→ clear UserDefaults
+```
+
+That is the target.
+
+Again: this is a STUDENT PROJECT.
+
+Do NOT turn this into an enterprise architecture.
+
+I value:
+
+1. simplicity
+2. readability
+3. explainability
+4. minimal code
+5. preserving existing functionality
+
+over production-level scalability or edge-case engineering.

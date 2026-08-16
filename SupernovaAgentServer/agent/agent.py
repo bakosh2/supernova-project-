@@ -110,6 +110,7 @@ async def run_specialist(
     trace: dict,
     llm_semaphore: asyncio.Semaphore | None = None,
     task_confirmed: bool = False,
+    tool_choice: dict | None = None,
 ) -> bool:
     """Run one user turn through a specialist. Mutates `history` in place; the
     caller (orchestrator) owns session persistence.
@@ -138,14 +139,15 @@ async def run_specialist(
             await emit({"type": "token", "text": chunk})
 
         try:
+            current_tool_choice = tool_choice if step == 0 else None
             if llm_semaphore is not None:
                 async with llm_semaphore:  # backpressure: bound in-flight LLM calls
                     assistant = await llm.complete(
-                        specialist.system_blocks, specialist.tools, window, on_text
+                        specialist.system_blocks, specialist.tools, window, on_text, tool_choice=current_tool_choice
                     )
             else:
                 assistant = await llm.complete(
-                    specialist.system_blocks, specialist.tools, window, on_text
+                    specialist.system_blocks, specialist.tools, window, on_text, tool_choice=current_tool_choice
                 )
         except Exception:  # noqa: BLE001
             log.exception("LLM call failed")
@@ -173,28 +175,72 @@ async def run_specialist(
         executed = await asyncio.gather(
             *(_execute_tool(b, ctx, specialist) for b in tool_uses)
         )
+        
         result_blocks = []
+
         for tool_result_block, result, envelope in executed:
             result_blocks.append(tool_result_block)
+
+            if isinstance(result, dict) and result.get("event") == "task_preview":
+                await emit(result)
+
             if "error" in result:
                 metrics.inc("tool_errors_total")
+
             if envelope is not None:
                 metrics.record_risk(envelope["risk"]["action"])
-                await emit({"type": "envelope", "envelope": envelope})
-                # compliance trail — fire-and-forget, never blocks the reply
+                await emit({
+                    "type": "envelope",
+                    "envelope": envelope
+                })
+            
                 audit_mod.fire_and_forget(
-                    audit.record(audit_mod.make_entry(session_id, envelope, trace))
+                    audit.record(
+                        audit_mod.make_entry(
+                            session_id,
+                            envelope,
+                            trace
+                        )
+                    )
                 )
-            elif result.get("success") and result.get("task"):
-                # Stable integration seam for the parents' dashboard. It can
-                # subscribe to this event and append the returned task without
-                # the chat knowing how that screen is implemented.
-                await emit({"type": "task_added", "task": result["task"]})
-        history.append({"role": "user", "content": result_blocks})
 
+            if result.get("success") and result.get("task"):
+                print("🟢 [BACKEND] emitting task_added")
+
+                await emit({
+                    "type": "task_added",
+                    "task": result["task"]
+                })
+                completed = True
+
+        # Siri only needs the prepared preview, so stop after its tool call.
+        if specialist.name == "siri_homework":
+            completed = True
+
+        # A real task was successfully added, or Siri finished its preview.
+        # Do not make another Claude call.
+        if completed:
+            break
+
+
+        # Otherwise give the tool result back to Claude for the next step.
+        history.append({
+            "role": "user",
+            "content": result_blocks
+        })
+
+    # Only use the fallback if the loop genuinely ran out of steps.
     if not completed:
         metrics.inc("max_steps_exhausted_total")
-        await emit({"type": "token", "text": FALLBACK_MESSAGE})
-        history.append({"role": "assistant", "content": FALLBACK_MESSAGE})
+        await emit({
+            "type": "token",
+            "text": FALLBACK_MESSAGE
+        })
+        history.append({
+            "role": "assistant",
+            "content": FALLBACK_MESSAGE
+        })
 
     return True
+
+
