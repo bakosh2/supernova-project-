@@ -274,8 +274,18 @@ class MockLLM:
 
     @staticmethod
     def _summary(task: dict) -> str:
-        subtasks = "\n".join(f"{index + 1}. {item['title']} — {item['duration']} دقائق" for index, item in enumerate(task["subtasks"]))
-        return f"هذا اقتراح للمهمة:\n• {task['title']}\n• المدة الإجمالية: {task['focus_duration']} دقيقة\n• استراحة: {task['break_duration']} دقائق (اقتراح)\n• الصلاحية: يوم واحد (اقتراح)\nالمهام الفرعية:\n{subtasks}\nهل تريد مني إضافة هذه المهمة إلى قائمة مهام الطفل؟"
+        subtasks = "\n".join(f"{index + 1}. {item['title']}" for index, item in enumerate(task["subtasks"]))
+        requires_code = "نعم" if task.get("requires_code") else "لا"
+        scope = task.get("scope") or task.get("title", "")
+        return (
+            f"عنوان المهمة: {task['title']}\n"
+            f"النطاق: {scope}\n"
+            f"مدة التركيز: {task['focus_duration']} دقيقة\n"
+            f"مدة الاستراحة: {task['break_duration']} دقائق\n"
+            f"يحتاج رمز تحقق: {requires_code}\n\n"
+            f"المهام الفرعية:\n{subtasks}\n\n"
+            f"هل تريد مني إضافة هذه المهمة إلى قائمة مهام الطفل؟"
+        )
 
 
 def make_llm(settings):
