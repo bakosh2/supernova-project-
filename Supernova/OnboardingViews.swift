@@ -1,6 +1,7 @@
 import SwiftUI
 import UIKit
 import ImageIO
+import AVFoundation
 
 /// حاوية تضبط حجم صورة الـ GIF وفق إطار SwiftUI بدقة.
 /// استخدام UIImageView مباشرة يجعل بعض ملفات GIF تعود لحجمها الأصلي الكبير.
@@ -117,7 +118,7 @@ struct PlanetSurfaceView: View {
                 .overlay(
                     Circle()
                         .fill(Color("tiffany").opacity(0.12))
-                        .frame(width: 300, height: 100)
+                        .frame(width: 300, height: 70)
                         .blur(radius: 30)
                         .offset(y: -20)
                 )
@@ -135,6 +136,7 @@ struct WelcomeView: View {
     @State private var tiltLeft = false
     @State private var twinkle = false
     @State private var lettersHaveLanded = false
+    @State private var titleChimePlayer: AVAudioPlayer?
 
     private let titleLetters = Array("SUPERNOVA")
 
@@ -212,12 +214,21 @@ struct WelcomeView: View {
                 lettersHaveLanded = false
                 DispatchQueue.main.async {
                     lettersHaveLanded = true
+                    playTitleChimeSound()
                 }
                 withAnimation(.easeInOut(duration: 2.4).repeatForever(autoreverses: true)) { floatUp = true }
                 withAnimation(.easeInOut(duration: 3.2).repeatForever(autoreverses: true)) { tiltLeft = true }
                 withAnimation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true)) { twinkle = true }
             }
         }
+    }
+
+    /// يشغّل نغمة السحر لحظة بدء نزول حروف "SUPERNOVA"، بنفس لحظة انطلاق الأنيميشن.
+    private func playTitleChimeSound() {
+        guard let url = Bundle.main.url(forResource: "SupernovaChime", withExtension: "mp3") else { return }
+        titleChimePlayer = try? AVAudioPlayer(contentsOf: url)
+        titleChimePlayer?.volume = 0.8
+        titleChimePlayer?.play()
     }
 }
 
