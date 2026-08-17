@@ -15,7 +15,7 @@ private struct SupernovaAgentEvent {
 /// The simulator reaches the server at 127.0.0.1. For a physical iPad, replace
 /// this host with the Mac's LAN address in one place below.
 private final class SupernovaAgentSocket: NSObject, URLSessionWebSocketDelegate {
-    private let endpoint = URL(string: "ws://127.0.0.1:8000/ws")!
+    private let endpoint = URL(string: "ws://172.20.10.3:8000/ws")!
     // نحتفظ بالجلسة طوال عمر المحادثة؛ لا تعتمد على جلسة مؤقتة قد تُغلق
     // بعد انقطاع التطبيق أو إعادة تشغيل الخادم.
     private lazy var session = URLSession(configuration: .default, delegate: self, delegateQueue: .main)

@@ -154,11 +154,11 @@ struct WelcomeView: View {
                         HStack(spacing: min(22, geo.size.width * 0.018)) {
                             ForEach(titleLetters.indices, id: \.self) { index in
                                 Text(String(titleLetters[index]))
-                                    .font(.system(size: min(70, geo.size.width * 0.072), weight: .bold, design: .rounded))
+                                    .font(.system(size: min(100, geo.size.width * 0.072), weight: .bold, design: .rounded))
                                     .foregroundStyle(Color("tiffany"))
                                     .shadow(color: Color("tiffany").opacity(0.9), radius: 12)
                                     .opacity(lettersHaveLanded ? 1 : 0)
-                                    .offset(y: lettersHaveLanded ? 0 : -180)
+                                    .offset(y: lettersHaveLanded ? 0 : -200)
                                     .animation(
                                         .spring(response: 1.0, dampingFraction: 0.72)
                                             .delay(Double(index) * 0.24),
@@ -176,7 +176,7 @@ struct WelcomeView: View {
                             .scaledToFit()
                             .frame(width: 30, height: 30)
                             .shadow(color: .yellow.opacity(0.8), radius: 10)
-                            .offset(x: 58, y: -330)
+                            .offset(x: 58, y: -400)
 
                         Image("supernova_astronaut")
                             .resizable()
@@ -195,9 +195,9 @@ struct WelcomeView: View {
                         Button("ابدأ الرحلة") {
                             navigateToModeSelection = true
                         }
-                        .font(.system(size: 20, weight: .bold))
+                        .font(.system(size: 30, weight: .bold))
                         .foregroundColor(.white)
-                        .frame(width: 220, height: 56)
+                        .frame(width: 300, height: 70)
                         .supernovaGlassCapsule()
                         .padding(.bottom, geo.size.height * 0.16)
                         .opacity(didAppear ? 1 : 0)
